@@ -1,0 +1,3206 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ГАРАЖ 777 — рулетка машин и номеров</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+
+  <!-- ЭКРАН ВХОДА -->
+<div id="authScreen" style="position:fixed; inset:0; background:var(--bg); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; transition: opacity 0.5s ease;">
+    <div id="logo" style="margin-bottom: 40px;">
+        <div class="big">ГАРАЖ <em>777</em></div>
+        <div class="sub">рулетка машин · номера · коллекция</div>
+    </div>
+    
+    <div style="display:flex; flex-direction:column; gap:16px; width:100%; max-width:320px;">
+        <button class="btn btn-go" onclick="playAsGuest()" style="padding: 16px; font-size: 16px; font-family:'Russo One';">
+            ИГРАТЬ КАК ГОСТЬ
+        </button>
+        
+        <button class="btn" onclick="loginWithGoogle()" style="padding: 16px; font-size: 16px; background:#fff; color:#333; border:none; font-weight:800; display:flex; justify-content:center; align-items:center; gap:10px;">
+            <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+            ВОЙТИ ЧЕРЕЗ GOOGLE
+        </button>
+    </div>
+</div>
+
+<div id="hud">
+  <div id="wallet"><div><div class="lbl">Баланс</div><div class="val" id="money">0 ₽</div></div></div>
+  <div class="corner">
+    <button class="iconbtn" id="homeBtn" title="Меню">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 9v11h5v-6h4v6h5V9"/></svg>
+    </button>
+  </div>
+</div>
+
+<main>
+  <div id="logo">
+    <div class="big">ГАРАЖ <em>777</em></div>
+    <div class="sub">рулетка машин · номера · коллекция</div>
+  </div>
+
+  <div id="mainTabs">
+    <button class="main-tab on" data-target="cars">АВТОМОБИЛИ</button>
+    <button class="main-tab" data-target="plates">НОМЕРА</button>
+  </div>
+
+  <div id="carSection">
+    <div class="roulette-wrap">
+      <aside id="pityPanel">
+        <div style="font-family:'Russo One'; font-size:14px; color:var(--gold); margin-bottom:10px; text-align:center;">ГАРАНТЫ</div>
+        <div class="pity-item">
+          <div class="pity-label"><span>Эпик</span><span id="pityELeft">20</span></div>
+          <div class="pity-bar-wrap"><div id="pityEBar" class="pity-bar" style="background:#b06bff; width:0%"></div></div>
+        </div>
+        <div class="pity-item">
+          <div class="pity-label"><span>Легенда</span><span id="pityLLeft">70</span></div>
+          <div class="pity-bar-wrap"><div id="pityLBar" class="pity-bar" style="background:#ff9f2e; width:0%"></div></div>
+        </div>
+        <div class="pity-item">
+          <div class="pity-label"><span>Мифик</span><span id="pityMLeft">200</span></div>
+          <div class="pity-bar-wrap"><div id="pityMBar" class="pity-bar" style="background:#ff4d6d; width:0%"></div></div>
+        </div>
+      </aside>
+
+      <div id="roulettesContainer"></div>
+    </div>
+
+    <div id="spinMultiRow"></div>
+
+    <section id="result">
+      <div id="resEmpty">
+        <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="var(--mut)" stroke-width="1.6"
+          stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M6 17l1.5-5h9L18 17M7.5 12l.8-4h7.4l.8 4"/><circle cx="8" cy="19" r="1.4"/><circle cx="16" cy="19" r="1.4"/></svg>
+        <div class="tt">Здесь появится твой выигрыш</div>
+        <div>Крути рулетку — собирай машины от Оки до Koenigsegg</div>
+      </div>
+      <div id="resContent"></div>
+      <div id="resGlobalActions" style="display:none; text-align:center; margin-top:16px;">
+          <div style="display:inline-flex; gap:8px; flex-wrap:wrap; justify-content:center;">
+              <button class="btn btn-gold" onclick="keepAllPending()" style="padding: 12px 32px; font-size: 15px;">Отложить всё</button>
+              <button class="btn btn-go" onclick="sellAllPending()" style="padding: 12px 32px; font-size: 15px;">Продать всё</button>
+          </div>
+      </div>
+    </section>
+
+    <div id="spinBar">
+      <button id="spinBtn">КРУТИТЬ<span id="spinPrice"></span></button>
+    </div>
+
+    <footer id="hint">Редкости: обычная · необычная · редкая · эпическая · легендарная · мифическая — всё по цене авто</footer>
+  </div>
+
+  <div id="plateSection" style="display:none;"></div>
+
+</main>
+
+<div id="ovl"></div>
+<aside id="drawer">
+  <header>
+    <h2 id="dTitle">Меню</h2>
+    <button class="iconbtn x" id="drawerX" title="Закрыть">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </header>
+  <nav id="dTabs">
+    <button class="dtab on" data-tab="menu">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Меню</button>
+    <button class="dtab" data-tab="garage">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20V8l9-5 9 5v12"/><path d="M7 20v-7h10v7"/><path d="M7 13h10"/></svg>
+      Гараж</button>
+    <button class="dtab" data-tab="platesInv">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+      Номера</button>
+    <button class="dtab" data-tab="trophies">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+      Трофеи</button>
+    <button class="dtab" data-tab="coll">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 21V13"/></svg>
+      Коллекция</button>
+    <button class="dtab" data-tab="upg">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10M6 20v-6M18 20V4"/></svg>
+      Улучшения</button>
+    <button class="dtab" data-tab="images">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      Фото</button>
+  </nav>
+  <div id="dBody"></div>
+</aside>
+
+<div id="modal"><div id="modalBox">
+  <header><h3 id="modalTitle">…</h3><button class="iconbtn x" id="modalX">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+  </button></header>
+  <div id="modalBody"></div>
+  <div id="modalFoot"></div>
+</div></div>
+
+<div id="toasts"></div>
+
+<script>
+'use strict';
+
+const DEFAULT_CAR_IMAGES = {
+
+};
+  // МЕСТО ДЛЯ ТВОЕГО КОДА С КАРТИНКАМИ
+
+
+const START_MONEY = 100000;
+const SPIN_COST   = 50000;
+const PLATE_COST  = 25000;
+const SELL_RATE   = 0.5;
+
+const REBIRTH_COSTS = [5000000, 70000000, 500000000, 2000000000, 10000000000];
+const REBIRTH_START_MONEY = [100000, 200000, 500000, 1000000, 2000000, 5000000];
+
+const $ = s => document.querySelector(s);
+const rnd = n => Math.floor(Math.random() * n);
+const pick = a => a[rnd(a.length)];
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const fmt = n => new Intl.NumberFormat('ru-RU').format(Math.round(n)) + ' ₽';
+const num = n => new Intl.NumberFormat('ru-RU').format(Math.round(n));
+
+const RARS = [
+  {id:0, name:'Обычная',     color:'#aeb9c6'},
+  {id:1, name:'Необычная',   color:'#5fd068'},
+  {id:2, name:'Редкая',      color:'#4da3ff'},
+  {id:3, name:'Эпическая',   color:'#b06bff'},
+  {id:4, name:'Легендарная', color:'#ff9f2e'},
+  {id:5, name:'Мифическая',  color:'#ff4d6d'},
+];
+
+const PLATE_RARS = [
+  {id:0, name:'Обычный',     color:'#aeb9c6'},
+  {id:1, name:'Необычный',   color:'#5fd068'},
+  {id:2, name:'Редкий',      color:'#4da3ff'},
+  {id:3, name:'Эпический',   color:'#b06bff'},
+  {id:4, name:'Легендарный', color:'#ff9f2e'},
+  {id:5, name:'Мифический',  color:'#ff4d6d'},
+];
+
+const rarOf = p => p >= 42000000 ? 5 : p >= 7600000 ? 4 : p >= 2800000 ? 3 : p >= 800000 ? 2 : p >= 300000 ? 1 : 0;
+
+const RAW_CARS = [
+  ['ВАЗ (Лада)','Ока (1111)', 85000, 'hatch','#c8d2dc'],
+  ['Лада','Калина I', 265000, 'hatch','#c0452f'],
+  ['Лада','Гранта', 785000, 'sedan','#2d5f9e'],
+  ['Лада','Веста', 1420000, 'sedan','#7e8894'],
+  ['Лада','Нива Legend', 980000, 'suv','#4b6b4a'],
+  ['Волга','ГАЗ-24', 420000, 'sedan','#d8d5c8'],
+  ['Волга','ГАЗ-31105', 380000, 'sedan','#3a4a5a'],
+  ['Москвич','Иж-412 (Святогор)', 150000, 'sedan','#94502c'],
+  ['Москвич','3', 1650000, 'crossover','#5c6a7d'],
+  ['УАЗ','Хантер', 1080000, 'suv','#4e5b45'],
+  ['УАЗ','Патриот', 1720000, 'suv','#2f4d3a'],
+  ['УАЗ','Патриот (Военный)', 2850000, 'suv','#2f4d3a', null, true],
+  ['ГАЗ','21 «Волга»', 890000, 'sedan','#e5e2c9'],
+  ['ГАЗ','66 «Шишига»', 650000, 'truck','#5a6b4a'],
+  ['ГАЗ','Тигр (Военный)', 15500000, 'suv','#3a4a5a', null, true],
+  ['Урал','4320 (Военный)', 6200000, 'truck','#4b6b4a', null, true],
+  ['КАМАЗ','5350 (Военный)', 8300000, 'truck','#3a4a5a', null, true],
+  ['Aurus','Senat', 31500000, 'sedan','#14161c'],
+  ['КАМАЗ','5490 NEO', 6800000, 'truck','#c0392b'],
+  ['MAN','TGX', 7250000, 'truck','#c7a242'],
+  ['Volvo','XC60', 4650000, 'suv','#20242c'],
+  ['Volvo','FH16', 8750000, 'truck','#c8ccd2'],
+  ['Opel','Astra J', 890000, 'hatch','#a9b4be'],
+  ['Mercedes-Benz','W124 E-Class', 950000, 'sedan','#8899aa'],
+  ['Mercedes-Benz','S-Class W223', 22500000, 'sedan','#101318'],
+  ['Mercedes-Benz','G63 AMG', 23500000, 'suv','#1c1f26'],
+  ['Mercedes-Benz','Actros', 11200000, 'truck','#b6bcc4'],
+  ['Audi','100 C4', 450000, 'sedan','#7a9bb5'],
+  ['Audi','Q7', 7800000, 'suv','#24272e'],
+  ['Audi','RS6 Avant', 14500000, 'wagon','#2c3138'],
+  ['BMW','E34 525i', 750000, 'sedan','#324a63'],
+  ['BMW','M5 F90', 16500000, 'sedan','#1a3a6b'],
+  ['Subaru','Impreza WRX STI', 1850000, 'sedan','#c53a2f'],
+  ['Mitsubishi','Lancer Evolution IX', 1950000, 'sedan','#dfe2e6'],
+  ['Mitsubishi','Outlander', 2950000, 'suv','#a0a0a0'],
+  ['Mitsubishi','Pajero Sport', 3250000, 'suv','#8b98a5'],
+  ['Honda','Civic Type R FK8', 3150000, 'hatch','#c8102e'],
+  ['Honda','CR-V', 2850000, 'suv','#9aa5ae'],
+  ['Nissan','Silvia S15', 1250000, 'coupe','#5b8bc9'],
+  ['Nissan','GT-R R35', 13500000, 'coupe','#c0c5cc'],
+  ['Nissan','Patrol', 5600000, 'suv','#2d3a45'],
+  ['Toyota','Corolla E120', 650000, 'sedan','#9fb0bd'],
+  ['Toyota','Camry 70', 3100000, 'sedan','#3b4148'],
+  ['Toyota','Land Cruiser 300', 8250000, 'suv','#dededa'],
+  ['Toyota','Supra A80', 7200000, 'coupe','#d9483b'],
+  ['Hyundai','Solaris', 950000, 'sedan','#b7c3cc'],
+  ['Hyundai','Tucson', 2650000, 'suv','#607389'],
+  ['Hyundai','Elantra', 1650000, 'sedan','#8897a5'],
+  ['Ford','Focus II', 720000, 'hatch','#395a7a'],
+  ['Ford','F-150 Raptor', 7850000, 'pickup','#2b3f66'],
+  ['Ford','Mustang GT', 5850000, 'coupe','#b3261e'],
+  ['Chevrolet','Lacetti', 580000, 'sedan','#8fa3b8'],
+  ['Chevrolet','Camaro SS', 5650000, 'coupe','#d4b02a'],
+  ['GAC','GS8', 3450000, 'suv','#2b2f36'],
+  ['GMC','Hummer EV', 8800000, 'suv','#39424d'],
+  ['Cadillac','Escalade', 9250000, 'suv','#14171c'],
+  ['Bugatti','Chiron Super Sport', 305000000, 'coupe','#1c2c5e'],
+  ['Lamborghini','Aventador', 33500000, 'coupe','#c79a2a'],
+  ['Lamborghini','Huracán STO', 24500000, 'coupe','#4cae4f'],
+  ['Ferrari','488 GTB', 27500000, 'coupe','#c01d1d'],
+  ['Ferrari','SF90 Stradale', 35500000, 'coupe','#a51212'],
+  ['Koenigsegg','Jesko', 195000000, 'coupe','#dfe4ea'],
+  ['Jeep','Wrangler Rubicon', 5700000, 'suv','#7a7f2e'],
+  ['Jeep','Grand Cherokee', 4850000, 'suv','#243244'],
+  ['Dodge','Charger SRT Hellcat', 7450000, 'coupe','#8c1d1d'],
+  ['Dodge','Viper ACR', 15500000, 'coupe','#c0392b'],
+  ['RAM','1500 TRX', 8150000, 'pickup','#2c3038'],
+  ['Lincoln','Navigator', 8650000, 'suv','#1e2836'],
+  ['Tesla','Model 3', 4750000, 'sedan','#82868c'],
+  ['Tesla','Model Y', 5450000, 'suv','#2b2e33'],
+  ['Tesla','Roadster (новый)', 9250000, 'coupe','#b3261e'],
+  ['KIA','Rio', 1280000, 'sedan','#a7b6c2'],
+  ['KIA','Sportage', 2750000, 'suv','#33506b'],
+  ['Haval','Jolion', 2050000, 'suv','#3a5a80'],
+  ['Haval','H9', 3650000, 'suv','#3b3f45'],
+  ['Chery','Tiggo 7 Pro Max', 2350000, 'suv','#26303c'],
+  ['Chery','Arrizo 8', 2150000, 'sedan','#262c35'],
+  ['Geely','Coolray', 2080000, 'suv','#6b4fa0'],
+  ['Geely','Monjaro', 3680000, 'suv','#20252c'],
+  ['Changan','CS75 Plus', 2550000, 'suv','#3f4a58'],
+  ['Jetour','Dashing', 2250000, 'suv','#3b4250'],
+  ['JAC','JS4', 1750000, 'suv','#68727c'],
+  ['Lixiang','L9', 6950000, 'suv','#2c3038'],
+  ['TANK','500', 4950000, 'suv','#4d4538'],
+  ['Zeekr','001', 5600000, 'wagon','#23262b'],
+  ['Volkswagen','Golf IV', 480000, 'hatch','#4a6f9c'],
+  ['Volkswagen','Golf VIII', 3100000, 'hatch','#b04a3c'],
+  ['Volkswagen','Polo sedan', 1150000, 'sedan','#90a0b0'],
+  ['Volkswagen','Passat B5', 620000, 'sedan','#31485c'],
+  ['BYD','Song Plus', 2750000, 'suv','#3c4653'],
+  ['BYD','Han EV', 4650000, 'sedan','#c03028'],
+  ['Mazda','RX-7 FD', 2550000, 'coupe','#d9d9d9'],
+  ['Mazda','CX-5', 2450000, 'suv','#8e2a2a'],
+  ['Lexus','LX 600', 11800000, 'suv','#1c2026'],
+  ['Lexus','IS 500', 5850000, 'sedan','#c8ccd2'],
+  ['Suzuki','Jimny', 1950000, 'suv','#c2c8bc'],
+  ['Porsche','911 Carrera', 16500000, 'coupe','#d5d8dd'],
+  ['Porsche','Cayenne Turbo GT', 21500000, 'suv','#23272d'],
+  ['Porsche','918 Spyder', 52500000, 'coupe','#b6bec7'],
+  ['ВАЗ (Лада)', '2101 (Копейка)', 240000, 'sedan', '#c8d2dc'],
+  ['ВАЗ (Лада)', '2102', 210000, 'wagon', '#a9b4be'],
+  ['ВАЗ (Лада)', '2103', 230000, 'sedan', '#c0452f'],
+  ['ВАЗ (Лада)', '2104', 200000, 'wagon', '#2d5f9e'],
+  ['ВАЗ (Лада)', '2105', 210000, 'sedan', '#7e8894'],
+  ['ВАЗ (Лада)', '2106', 220000, 'sedan', '#4b6b4a'],
+  ['ВАЗ (Лада)', '2107', 230000, 'sedan', '#d8d5c8'],
+  ['ВАЗ (Лада)', '2108', 250000, 'hatch', '#3a4a5a'],
+  ['ВАЗ (Лада)', '2109', 260000, 'hatch', '#94502c'],
+  ['ВАЗ (Лада)', '2110', 290000, 'sedan', '#5c6a7d'],
+  ['ВАЗ (Лада)', '2111', 280000, 'wagon', '#4e5b45'],
+  ['ВАЗ (Лада)', '2112', 300000, 'hatch', '#2f4d3a'],
+  ['ВАЗ (Лада)', '2113', 310000, 'hatch', '#4b6b4a'],
+  ['Лада', '2114', 315000, 'hatch', '#e5e2c9'],
+  ['Лада', '2115', 320000, 'sedan', '#5a6b4a'],
+  ['Лада', 'Приора (2170)', 460000, 'sedan', '#3a4a5a'],
+  ['Лада', 'Приора Хэтчбек', 450000, 'hatch', '#4b6b4a'],
+  ['Лада', 'Гранта Лифтбек', 810000, 'sedan', '#c0392b'],
+  ['Лада', 'Калина 2', 550000, 'hatch', '#c7a242'],
+  ['Лада', 'Веста SW', 1380000, 'wagon', '#20242c'],
+  ['Лада', 'Веста SW Cross', 1550000, 'wagon', '#c8ccd2'],
+  ['Лада', 'Нива 2121', 450000, 'suv', '#a9b4be'],
+  ['Лада', 'Нива Урбан', 850000, 'suv', '#8899aa'],
+  ['Лада', 'XRAY', 1120000, 'crossover', '#101318'],
+  ['УАЗ', 'Буханка (452)', 1250000, 'van', '#c7a242'],
+  ['УАЗ', 'Профи', 1850000, 'van', '#1c1f26'],
+  ['ГАЗ', '3102 «Волга»', 320000, 'sedan', '#b6bcc4'],
+  ['ГАЗ', '3110 «Волга»', 350000, 'sedan', '#7a9bb5'],
+  ['ГАЗ', 'Чайка', 3600000, 'sedan', '#24272e'],
+  ['ГАЗ', 'Победа', 2800000, 'sedan', '#2c3138'],
+  ['Москвич', '2140', 200000, 'sedan', '#324a63'],
+  ['Москвич', '2141', 210000, 'hatch', '#1a3a6b'],
+  ['Aurus', 'Komendant', 36500000, 'suv', '#c53a2f'],
+  ['Toyota', 'Chaser (JZX100)', 1550000, 'sedan', '#dfe2e6'],
+  ['Toyota', 'Mark II (JZX110)', 1750000, 'sedan', '#a0a0a0'],
+  ['Toyota', 'Cresta (JZX100)', 1650000, 'sedan', '#20242c'],
+  ['Toyota', 'Crown (S180)', 2350000, 'sedan', '#8b98a5'],
+  ['Toyota', 'Camry (XV30)', 850000, 'sedan', '#c8102e'],
+  ['Toyota', 'Camry (XV50)', 1850000, 'sedan', '#9aa5ae'],
+  ['Toyota', 'Camry (XV70)', 3150000, 'sedan', '#5b8bc9'],
+  ['Toyota', 'Land Cruiser 80', 2500000, 'suv', '#c0c5cc'],
+  ['Toyota', 'Land Cruiser 100', 3200000, 'suv', '#2d3a45'],
+  ['Toyota', 'Land Cruiser 105', 3500000, 'suv', '#9fb0bd'],
+  ['Toyota', 'Land Cruiser 200', 6200000, 'suv', '#3b4148'],
+  ['Toyota', 'Land Cruiser Prado 120', 2200000, 'suv', '#dededa'],
+  ['Toyota', 'Land Cruiser Prado 150', 4500000, 'suv', '#d9483b'],
+  ['Toyota', 'Supra (A90)', 5600000, 'coupe', '#b7c3cc'],
+  ['Toyota', 'RAV4 (XA50)', 3400000, 'crossover', '#607389'],
+  ['Toyota', 'Highlander (XU70)', 4500000, 'suv', '#8897a5'],
+  ['Toyota', 'Alphard (AH30)', 6500000, 'minivan', '#395a7a'],
+  ['Lexus', 'LX 470', 2200000, 'suv', '#2b3f66'],
+  ['Lexus', 'LX 570', 7200000, 'suv', '#b3261e'],
+  ['Lexus', 'GX 460', 5800000, 'suv', '#8fa3b8'],
+  ['Lexus', 'GX 470', 1950000, 'suv', '#d4b02a'],
+  ['Lexus', 'RX 300', 1200000, 'suv', '#2b2f36'],
+  ['Lexus', 'RX 350', 4650000, 'suv', '#39424d'],
+  ['Lexus', 'IS 250', 1450000, 'sedan', '#14171c'],
+  ['Lexus', 'GS 300', 2950000, 'sedan', '#c8ccd2'],
+  ['Lexus', 'LS 460', 2500000, 'sedan', '#1c2c5e'],
+  ['Lexus', 'LS 500', 9800000, 'sedan', '#c79a2a'],
+  ['BMW', '3 Series (E30)', 1250000, 'sedan', '#4cae4f'],
+  ['BMW', '3 Series (E46)', 1550000, 'sedan', '#a51212'],
+  ['BMW', '3 Series (E90)', 1850000, 'sedan', '#dfe4ea'],
+  ['BMW', '3 Series (F30)', 3300000, 'sedan', '#7a7f2e'],
+  ['BMW', '3 Series (G20)', 4950000, 'sedan', '#243244'],
+  ['BMW', '5 Series (E39)', 1250000, 'sedan', '#8c1d1d'],
+  ['BMW', '5 Series (E60)', 1650000, 'sedan', '#c0392b'],
+  ['BMW', '5 Series (F10)', 2850000, 'sedan', '#2c3038'],
+  ['BMW', '5 Series (G30)', 5400000, 'sedan', '#1e2836'],
+  ['BMW', '7 Series (E38)', 1650000, 'sedan', '#82868c'],
+  ['BMW', '7 Series (E65)', 1850000, 'sedan', '#2b2e33'],
+  ['BMW', '7 Series (F01)', 2600000, 'sedan', '#b3261e'],
+  ['BMW', '7 Series (G11)', 6800000, 'sedan', '#a7b6c2'],
+  ['BMW', 'X1 (F48)', 3200000, 'suv', '#33506b'],
+  ['BMW', 'X3 (G01)', 4650000, 'suv', '#3a5a80'],
+  ['BMW', 'X4 (G02)', 5500000, 'suv', '#3b3f45'],
+  ['BMW', 'X5 (E53)', 1250000, 'suv', '#26303c'],
+  ['BMW', 'X5 (E70)', 1950000, 'suv', '#262c35'],
+  ['BMW', 'X5 (F15)', 3650000, 'suv', '#6b4fa0'],
+  ['BMW', 'X5 (G05)', 8750000, 'suv', '#20252c'],
+  ['BMW', 'X6 (E71)', 1850000, 'suv', '#3f4a58'],
+  ['BMW', 'X6 (F16)', 4150000, 'suv', '#3b4250'],
+  ['BMW', 'X6 (G06)', 9950000, 'suv', '#68727c'],
+  ['BMW', 'X6 M Competition (F96)', 14800000, 'suv', '#2c3038'],
+  ['BMW', 'X7 (G07)', 11800000, 'suv', '#4d4538'],
+  ['BMW', 'M3 (E46)', 1950000, 'coupe', '#23262b'],
+  ['BMW', 'M3 (E92)', 2800000, 'coupe', '#4a6f9c'],
+  ['BMW', 'M3 (F80)', 5650000, 'sedan', '#b04a3c'],
+  ['BMW', 'M4 (G82)', 7950000, 'coupe', '#90a0b0'],
+  ['BMW', 'M5 (E39)', 1800000, 'sedan', '#31485c'],
+  ['BMW', 'M5 (E60)', 2300000, 'sedan', '#3c4653'],
+  ['BMW', 'M8 (F91)', 16800000, 'coupe', '#c03028'],
+  ['Audi', '80 (B4)', 480000, 'sedan', '#d9d9d9'],
+  ['Audi', 'A4 (B8)', 1650000, 'sedan', '#8e2a2a'],
+  ['Audi', 'A4 (B9)', 3800000, 'sedan', '#1c2026'],
+  ['Audi', 'A6 (C6)', 1250000, 'sedan', '#c8ccd2'],
+  ['Audi', 'A6 (C7)', 2850000, 'sedan', '#c2c8bc'],
+  ['Audi', 'A6 (C8)', 5200000, 'sedan', '#d5d8dd'],
+  ['Audi', 'A7 (C7)', 4500000, 'sedan', '#23272d'],
+  ['Audi', 'A8 (D3)', 1400000, 'sedan', '#b6bec7'],
+  ['Audi', 'A8 (D5)', 8750000, 'sedan', '#d8dbe0'],
+  ['Audi', 'Q5 (FY)', 4650000, 'suv', '#c8d2dc'],
+  ['Audi', 'Q8 (4M)', 9750000, 'suv', '#c0452f'],
+  ['Audi', 'R8 (V10)', 16800000, 'coupe', '#2d5f9e'],
+  ['Audi', 'RS7 (C8)', 15500000, 'sedan', '#7e8894'],
+  ['Audi', 'TT (8J)', 2200000, 'coupe', '#4b6b4a'],
+  ['Mercedes-Benz', 'A-Class (W176)', 1850000, 'hatch', '#d8d5c8'],
+  ['Mercedes-Benz', 'A-Class (W177)', 3800000, 'hatch', '#3a4a5a'],
+  ['Mercedes-Benz', 'C-Class (W204)', 1650000, 'sedan', '#94502c'],
+  ['Mercedes-Benz', 'C-Class (W205)', 3300000, 'sedan', '#5c6a7d'],
+  ['Mercedes-Benz', 'C-Class (W206)', 5800000, 'sedan', '#4e5b45'],
+  ['Mercedes-Benz', 'E-Class (W211)', 1450000, 'sedan', '#2f4d3a'],
+  ['Mercedes-Benz', 'E-Class (W212)', 2500000, 'sedan', '#4b6b4a'],
+  ['Mercedes-Benz', 'E-Class (W213)', 4650000, 'sedan', '#e5e2c9'],
+  ['Mercedes-Benz', 'S-Class (W140)', 1350000, 'sedan', '#5a6b4a'],
+  ['Mercedes-Benz', 'S-Class (W220)', 1200000, 'sedan', '#3a4a5a'],
+  ['Mercedes-Benz', 'S-Class (W221)', 2250000, 'sedan', '#4b6b4a'],
+  ['Mercedes-Benz', 'S-Class (W222)', 6650000, 'sedan', '#c0392b'],
+  ['Mercedes-Benz', 'G-Class (W463)', 8500000, 'suv', '#c7a242'],
+  ['Mercedes-Benz', 'G-Class (W464)', 18500000, 'suv', '#20242c'],
+  ['Mercedes-Benz', 'GLE 300 (V167)', 7950000, 'suv', '#c8ccd2'],
+  ['Mercedes-Benz', 'GLE 450 Coupe', 9750000, 'suv', '#a9b4be'],
+  ['Mercedes-Benz', 'GLE 63 AMG (V167)', 14500000, 'suv', '#8899aa'],
+  ['Mercedes-Benz', 'GLS 400 (X166)', 5950000, 'suv', '#101318'],
+  ['Mercedes-Benz', 'GLS 600 (X167)', 16500000, 'suv', '#1c1f26'],
+  ['Mercedes-Benz', 'GLC 300', 5350000, 'suv', '#b6bcc4'],
+  ['Mercedes-Benz', 'ML 350 (W164)', 1650000, 'suv', '#7a9bb5'],
+  ['Mercedes-Benz', 'AMG GT', 12800000, 'coupe', '#24272e'],
+  ['Mercedes-Benz', 'V-Class', 7650000, 'minivan', '#2c3138'],
+  ['Mercedes-Maybach', 'S-Class (Z223)', 28500000, 'sedan', '#324a63'],
+  ['Mercedes-Maybach', 'GLS 600 (X167)', 22500000, 'suv', '#1a3a6b'],
+  ['Mercedes-Maybach', 'G-Class (Z463)', 35000000, 'suv', '#c53a2f'],
+  ['Nissan', 'Silvia S13', 1200000, 'coupe', '#dfe2e6'],
+  ['Nissan', 'Silvia S14', 1500000, 'coupe', '#a0a0a0'],
+  ['Nissan', 'Skyline R32', 2800000, 'coupe', '#8b98a5'],
+  ['Nissan', 'Skyline R33', 3200000, 'coupe', '#c8102e'],
+  ['Nissan', 'Skyline R34', 6500000, 'coupe', '#9aa5ae'],
+  ['Nissan', 'Z (350Z)', 1800000, 'coupe', '#5b8bc9'],
+  ['Nissan', 'Z (370Z)', 2400000, 'coupe', '#c0c5cc'],
+  ['Nissan', 'Teana (J32)', 1300000, 'sedan', '#2d3a45'],
+  ['Nissan', 'X-Trail (T31)', 1800000, 'crossover', '#9fb0bd'],
+  ['Nissan', 'X-Trail (T32)', 2400000, 'crossover', '#3b4148'],
+  ['Nissan', 'Cedric (Y33)', 900000, 'sedan', '#dededa'],
+  ['Honda', 'Civic (EK)', 850000, 'hatch', '#d9483b'],
+  ['Honda', 'Civic (FD)', 1100000, 'sedan', '#b7c3cc'],
+  ['Honda', 'Civic (FC)', 1900000, 'sedan', '#607389'],
+  ['Honda', 'Prelude (BB6)', 800000, 'coupe', '#8897a5'],
+  ['Honda', 'Accord (CL)', 950000, 'sedan', '#395a7a'],
+  ['Honda', 'Accord (CR)', 2100000, 'sedan', '#2b3f66'],
+  ['Honda', 'Integra (DC2)', 1200000, 'coupe', '#b3261e'],
+  ['Honda', 'S2000', 2200000, 'coupe', '#8fa3b8'],
+  ['Honda', 'NSX (NA1)', 5500000, 'coupe', '#d4b02a'],
+  ['Mitsubishi', 'Lancer Evo VII', 1800000, 'sedan', '#2b2f36'],
+  ['Mitsubishi', 'Lancer Evo X', 2500000, 'sedan', '#39424d'],
+  ['Mitsubishi', 'Eclipse (3G)', 900000, 'coupe', '#14171c'],
+  ['Mitsubishi', '3000GT', 1400000, 'coupe', '#c8ccd2'],
+  ['Mitsubishi', 'Galant (E39)', 750000, 'sedan', '#1c2c5e'],
+  ['Mitsubishi', 'Pajero (4)', 2200000, 'suv', '#c79a2a'],
+  ['Subaru', 'Forester (SG)', 1100000, 'suv', '#4cae4f'],
+  ['Subaru', 'Forester (SJ)', 2200000, 'suv', '#c01d1d'],
+  ['Subaru', 'Legacy (BL)', 1300000, 'sedan', '#a51212'],
+  ['Subaru', 'BRZ', 3200000, 'coupe', '#dfe4ea'],
+  ['Kia', 'K5', 2550000, 'sedan', '#7a7f2e'],
+  ['Kia', 'Stinger', 4350000, 'sedan', '#243244'],
+  ['Kia', 'Ceed', 1500000, 'hatch', '#8c1d1d'],
+  ['Kia', 'Sorento', 3400000, 'suv', '#c0392b'],
+  ['Hyundai', 'Creta', 2100000, 'suv', '#2c3038'],
+  ['Hyundai', 'Santa Fe', 3900000, 'suv', '#1e2836'],
+  ['Hyundai', 'Sonata', 2800000, 'sedan', '#82868c'],
+  ['Haval', 'F7', 2850000, 'suv', '#2b2e33'],
+  ['Haval', 'Dargo', 3100000, 'suv', '#b3261e'],
+  ['Chery', 'Tiggo 4', 1800000, 'suv', '#a7b6c2'],
+  ['Chery', 'Tiggo 8 Pro', 2950000, 'suv', '#33506b'],
+  ['Geely', 'Atlas', 2300000, 'suv', '#3a5a80'],
+  ['Geely', 'Tugella', 3700000, 'suv', '#3b3f45'],
+  ['Changan', 'CS35 Plus', 2000000, 'suv', '#26303c'],
+  ['Changan', 'UNI-K', 3800000, 'suv', '#262c35'],
+  ['Exeed', 'TXL', 3600000, 'suv', '#6b4fa0'],
+  ['Exeed', 'VX', 4800000, 'suv', '#20252c'],
+  ['TANK', '300', 3300000, 'suv', '#3f4a58'],
+  ['Ford', 'Mondeo (MK4)', 1150000, 'sedan', '#3b4250'],
+  ['Ford', 'Mustang Shelby', 8750000, 'coupe', '#68727c'],
+  ['Ford', 'Explorer', 4350000, 'suv', '#2c3038'],
+  ['Ford', 'Bronco', 5650000, 'suv', '#4d4538'],
+  ['Chevrolet', 'Cruze', 980000, 'sedan', '#23262b'],
+  ['Chevrolet', 'Corvette C8', 9750000, 'coupe', '#4a6f9c'],
+  ['Chevrolet', 'Tahoe', 7650000, 'suv', '#b04a3c'],
+  ['Dodge', 'Challenger', 4950000, 'coupe', '#90a0b0'],
+  ['Tesla', 'Model S Plaid', 11800000, 'sedan', '#31485c'],
+  ['Tesla', 'Model X Plaid', 12800000, 'suv', '#3c4653'],
+  ['Renault', 'Logan', 780000, 'sedan', '#c03028'],
+  ['Renault', 'Duster', 1650000, 'suv', '#d9d9d9'],
+  ['Skoda', 'Octavia (A7)', 2250000, 'sedan', '#8e2a2a'],
+  ['Skoda', 'Superb', 3200000, 'sedan', '#1c2026'],
+  ['Volvo', 'XC90', 6650000, 'suv', '#c8ccd2'],
+  ['Volvo', 'S60', 2800000, 'sedan', '#c2c8bc'],
+  ['Land Rover', 'Range Rover Sport', 8750000, 'suv', '#d5d8dd'],
+  ['Land Rover', 'Range Rover Autobiography', 14800000, 'suv', '#23272d'],
+  ['Land Rover', 'Defender', 7650000, 'suv', '#b6bec7'],
+  ['Lamborghini', 'Urus', 25500000, 'suv', '#d8dbe0'],
+  ['Ferrari', 'LaFerrari', 87500000, 'coupe', '#c8d2dc'],
+  ['Bugatti', 'Veyron', 185000000, 'coupe', '#c0452f'],
+  ['Koenigsegg', 'Regera', 155000000, 'coupe', '#2d5f9e'],
+  ['Rolls-Royce', 'Ghost', 38500000, 'sedan', '#7e8894'],
+  ['Rolls-Royce', 'Phantom', 56500000, 'sedan', '#4b6b4a'],
+  ['Rolls-Royce', 'Cullinan', 48500000, 'suv', '#d8d5c8'],
+  ['Bentley', 'Continental GT', 28500000, 'coupe', '#3a4a5a'],
+  ['Bentley', 'Bentayga', 32500000, 'suv', '#94502c'],
+  ['McLaren', '720S', 25500000, 'coupe', '#5c6a7d'],
+  ['McLaren', '765LT', 32500000, 'coupe', '#4e5b45'],
+  ['Aston Martin', 'DB11', 22500000, 'coupe', '#2f4d3a']
+];
+
+const CARS = RAW_CARS.map(([brand, model, price, body, color, img, isMilitary]) =>
+  ({brand, model, price, body, color: color.trim(), r: rarOf(price), img: img || null, isMilitary: !!isMilitary}));
+
+const CAR_PATHS = {
+  sedan:  'M10,62 L12,50 Q14,46 24,45 L46,43 L58,29 Q62,25 71,25 L99,25 Q107,25 113,31 L127,44 L144,46 Q154,48 154,57 L154,62 Q154,66 148,66 L16,66 Q10,66 10,62 Z',
+  hatch:  'M12,62 L14,48 Q16,43 25,42 L42,41 L55,27 Q59,23 68,23 L95,23 Q104,23 110,30 L123,45 L134,47 Q142,49 142,57 L142,62 Q142,66 136,66 L18,66 Q12,66 12,62 Z',
+  wagon:  'M9,62 L11,48 Q13,43 23,42 L41,41 L55,27 Q59,23 69,23 L118,23 Q126,23 130,29 L137,44 L146,46 Q154,48 154,57 L154,62 Q154,66 148,66 L15,66 Q9,66 9,62 Z',
+  suv:    'M10,60 L12,42 Q14,36 25,35 L46,34 L58,18 Q62,14 72,14 L104,14 Q112,14 116,20 L129,37 L143,39 Q152,41 152,51 L152,60 Q152,66 144,66 L18,66 Q10,66 10,60 Z',
+  coupe:  'M8,63 L11,53 Q14,49 24,48 L50,46 L64,31 Q70,26 80,26 L101,26 Q109,26 115,32 L128,46 L144,48 Q154,50 154,58 L154,63 Q154,67 148,67 L14,67 Q8,67 8,63 Z',
+  pickup: 'M10,60 L12,44 Q14,38 25,37 L46,36 L58,20 Q62,16 72,16 L96,16 Q104,16 108,22 L118,37 L118,44 L118,60 Q118,66 110,66 L18,66 Q10,66 10,60 Z',
+  crossover:'M10,61 L12,44 Q14,38 25,37 L46,36 L58,20 Q62,16 72,16 L100,16 Q108,16 112,22 L125,38 L141,40 Q151,42 151,52 L151,61 Q151,66 143,66 L18,66 Q10,66 10,61 Z',
+  truck:  'M6,62 L8,34 Q10,28 19,27 L52,26 L52,16 Q52,12 60,12 L92,12 Q98,12 98,18 L98,62 L6,62 Z M104,26 L150,26 Q154,26 154,32 L154,60 Q154,66 146,66 L104,66 Z',
+  van:    'M10,60 L12,30 Q14,22 25,22 L110,22 Q118,22 122,30 L135,42 L146,44 Q154,46 154,54 L154,60 Q154,66 148,66 L18,66 Q10,66 10,60 Z',
+  minivan:'M10,60 L12,40 Q14,32 25,32 L110,32 Q118,32 122,40 L135,48 L146,50 Q154,52 154,58 L154,60 Q154,66 148,66 L18,66 Q10,66 10,60 Z'
+};
+
+function carSVG(body, color){
+  const p = CAR_PATHS[body] || CAR_PATHS.sedan;
+  const wheel = cx => `<circle cx="${cx}" cy="64" r="12" fill="#0a0d12" stroke="#333d4e" stroke-width="2"/>` +
+                      `<circle cx="${cx}" cy="64" r="5" fill="#6b7688"/>`;
+  const wheels = body === 'truck' ? wheel(30) + wheel(74) + wheel(130) : wheel(42) + wheel(126);
+  const window_ = body === 'truck' ? '' :
+    `<path d="M62,30 L98,30 L106,41 L54,41 Z" fill="rgba(255,255,255,.13)"/>`;
+  return `<svg viewBox="0 0 160 78" xmlns="http://www.w3.org/2000/svg">
+    <path d="${p}" fill="${color}" stroke="rgba(0,0,0,.4)" stroke-width="1.6"/>
+    ${window_}
+    ${wheels}
+  </svg>`;
+}
+
+function getCarVisual(car) {
+  const key = car.brand + '|' + car.model;
+  if (state.carImages && state.carImages[key]) {
+    return `<img src="${state.carImages[key]}" alt="${car.brand} ${car.model}">`;
+  }
+  if (car.img && car.img !== 'ВСТАВЬТЕ_СЮДА_ССЫЛКУ_ИЛИ_BASE64') {
+    return `<img src="${car.img}" alt="${car.brand} ${car.model}">`;
+  }
+  return carSVG(car.body, car.color);
+}
+
+const RU_LETTERS = 'АВЕКМНОРСТУХ';
+const UA_LETTERS = 'АВЕІКМНОРСТХ';
+
+const FAMOUS_SERIES_RU = [
+  // ================= МОСКВА И МО (ФЕДЕРАЛЬНЫЕ) =================
+  {s:'АМР', desc:'Высшие органы власти, Администрация Президента', k:10, regs:['77','97','99','177','197','199','777','797','799','977']},
+  {s:'ЕКХ', desc:'ФСО России (Федеральная служба охраны)', k:10, regs:['77','97','99','177','197','199','777','797','799','977']},
+  {s:'ХКХ', desc:'ФСБ, структуры госбезопасности', k:10, regs:['77','97','99','177','197','199','777','797','799','977']},
+  {s:'АОО', desc:'Управление делами Президента РФ', k:9, regs:['77','97','99','177','197','199','777','797','799','977']},
+  {s:'МОО', desc:'Управление делами Президента РФ', k:9, regs:['77','97','99','177','197','199','777','797','799','977']},
+  {s:'ВОО', desc:'Управление делами Президента РФ', k:9, regs:['77','97','99','177','197','199','777','797','799','977']},
+  {s:'СОО', desc:'Совет Федерации / Госдума', k:9, regs:['77','97','99','177','197','199','777','797','799','977']},
+  {s:'КМР', desc:'МВД, Прокуратура, Следственный комитет', k:9, regs:['77','97','99','177','197','199','777','797','799','977']},
+  {s:'РМР', desc:'МВД, Прокуратура, Следственный комитет', k:9, regs:['77','97','99','177','197','199','777','797','799','977']},
+  {s:'ТМР', desc:'МВД, Прокуратура, Следственный комитет', k:9, regs:['77','97','99','177','197','199','777','797','799','977']},
+  {s:'ООО', desc:'ФСБ, налоговая полиция, бизнес (Москва)', k:8, regs:['77','97','99','177','197','199','777','797','799','977']},
+  {s:'ССС', desc:'Спецсвязь, Фельдъегерская служба', k:8, regs:['77','97','99','177','197','199','777','797','799','977','38','138','63','163','763']},
+
+  // ================= САНКТ-ПЕТЕРБУРГ (СМОЛЬНЫЙ) =================
+  {s:'ОАА', desc:'Смольный, ЗакС, прокуратура, ГУ МВД СПб', k:9, regs:['78','98','178','198','16','116','716','47','147']},
+  {s:'ОАО', desc:'Смольный, ЗакС, прокуратура, ГУ МВД СПб', k:9, regs:['78','98','178','198']},
+  {s:'ОКО', desc:'Смольный, ЗакС, прокуратура, ГУ МВД СПб', k:9, regs:['78','98','178','198']},
+  {s:'ООС', desc:'Смольный, ЗакС, прокуратура, ГУ МВД СПб', k:9, regs:['78','98','178','198']},
+  {s:'ОТТ', desc:'Смольный, ЗакС, прокуратура, ГУ МВД СПб', k:9, regs:['78','98','178','198']},
+  {s:'ОМР', desc:'Смольный, ЗакС, прокуратура, ГУ МВД СПб', k:9, regs:['78','98','178','198']},
+
+  // ================= РЕСПУБЛИКИ И ОБЛАСТИ (УНИКАЛЬНЫЕ) =================
+  {s:'АРА', desc:'Администрация Республики Адыгея', k:9, regs:['01','101']},
+  {s:'РКР', desc:'Руководство Республики Башкортостан', k:9, regs:['02','102','702']},
+  {s:'ККС', desc:'Конституционный суд Башкортостана', k:8, regs:['02','102','702']},
+  {s:'ССК', desc:'Следственный комитет / УМВД', k:8, regs:['02','102','702','26','126']},
+  {s:'РРД', desc:'Руководство Республики Дагестан', k:9, regs:['05','105']},
+  {s:'КБР', desc:'Руководство Кабардино-Балкарии', k:9, regs:['07','107']},
+  {s:'РРК', desc:'Правительство / Руководство региона', k:8, regs:['08','108','11','111','82']},
+  {s:'КЧР', desc:'Руководство Карачаево-Черкесии', k:9, regs:['09','109']},
+  {s:'АРК', desc:'Администрация / Правительство региона', k:8, regs:['10','110','11','111','82']},
+  {s:'ТРК', desc:'Правительство Республики Карелия', k:8, regs:['10','110']},
+  {s:'РМЭ', desc:'Руководство Марий Эл', k:9, regs:['12','112']},
+  {s:'РРМ', desc:'Руководство Мордовии', k:9, regs:['13','113']},
+  {s:'МРМ', desc:'Министерства Мордовии', k:8, regs:['13','113']},
+  {s:'РСЯ', desc:'Руководство Республики Саха (Якутия)', k:9, regs:['14','114']},
+  {s:'АРС', desc:'Администрация Республики Саха', k:8, regs:['14','114']},
+  {s:'РСО', desc:'Руководство Северной Осетии / Самарской / Саратовской / Сахалинской / Смоленской обл.', k:9, regs:['15','115','63','163','763','64','164','65','165','67','167']},
+  {s:'АСО', desc:'Администрация Северной Осетии / Самарской / Саратовской обл.', k:8, regs:['15','115','63','163','763','64','164','65','165','66','96','196','67','167']},
+  {s:'РРТ', desc:'Руководство Татарстана / Тывы', k:9, regs:['16','116','716','17','117']},
+  {s:'АРТ', desc:'Правительство Тывы', k:8, regs:['17','117']},
+  {s:'АУР', desc:'Администрация Удмуртии', k:8, regs:['18','118']},
+  {s:'РУР', desc:'Руководство Удмуртии', k:9, regs:['18','118']},
+  {s:'АРХ', desc:'Администрация Хакасии', k:8, regs:['19','119']},
+  {s:'РРХ', desc:'Правительство Хакасии', k:9, regs:['19','119']},
+  {s:'КРА', desc:'Высшее руководство Чеченской Республики', k:10, regs:['20','95']},
+  {s:'АЧР', desc:'Администрация Чувашии', k:8, regs:['21','121']},
+  {s:'РЧР', desc:'Руководство Чувашии', k:9, regs:['21','121']},
+  {s:'ААК', desc:'Администрация Алтайского края', k:9, regs:['22','122']},
+  {s:'АСК', desc:'Администрация Краснодарского / Ставропольского края', k:9, regs:['23','93','123','193','323','26','126']},
+  {s:'РКК', desc:'Руководство Краснодарского края', k:9, regs:['23','93','123','193','323']},
+  {s:'АКК', desc:'Администрация Красноярского / Камчатского края', k:9, regs:['24','124','41','141']},
+  {s:'КРК', desc:'Руководство Красноярского края', k:9, regs:['24','124']},
+  {s:'АПК', desc:'Администрация Приморского / Пермского края', k:9, regs:['25','125','59','81','159']},
+  {s:'МПК', desc:'Милиция/МВД Приморья', k:8, regs:['25','125']},
+  {s:'РСК', desc:'Руководство Ставропольского края', k:9, regs:['26','126']},
+  {s:'АХК', desc:'Администрация Хабаровского края', k:9, regs:['27','127']},
+  {s:'РХК', desc:'Руководство Хабаровского края', k:9, regs:['27','127']},
+  {s:'ААО', desc:'Администрация области / АО', k:8, regs:['28','128','29','129','30','130','79','179']},
+  {s:'РАО', desc:'Руководство Амурской области', k:9, regs:['28','128']},
+  {s:'АБО', desc:'Администрация Белгородской / Брянской области', k:9, regs:['31','131','32','132']},
+  {s:'РБО', desc:'Руководство Белгородской / Брянской области', k:9, regs:['31','131','32','132']},
+  {s:'АВО', desc:'Администрация Владимирской / Волгоградской / Вологодской / Воронежской обл.', k:9, regs:['33','133','34','134','35','135','36','136']},
+  {s:'РВО', desc:'Руководство Владимирской / Волгоградской / Вологодской / Воронежской обл.', k:9, regs:['34','134','35','135','36','136']},
+  {s:'АИО', desc:'Администрация Ивановской / Иркутской области', k:9, regs:['37','137','38','138']},
+  {s:'РИО', desc:'Руководство Ивановской / Иркутской области', k:9, regs:['37','137','38','138']},
+  {s:'АКО', desc:'Администрация области / края', k:8, regs:['39','91','40','140','41','141','42','142','43','143','44','144','45','145','46','146']},
+  {s:'РКО', desc:'Руководство области / края', k:9, regs:['39','91','40','140','43','143','44','144','45','145','46','146']},
+  {s:'ОЛО', desc:'Правительство Ленинградской области', k:9, regs:['47','147']},
+  {s:'АЛО', desc:'Администрация Липецкой области', k:9, regs:['48','148']},
+  {s:'РЛО', desc:'Руководство Липецкой области', k:9, regs:['48','148']},
+  {s:'АМО', desc:'Администрация Магаданской / Мурманской обл. / Подмосковья', k:9, regs:['49','149','50','90','150','190','750','790','51','151']},
+  {s:'РМО', desc:'Руководство Магаданской / Мурманской области', k:9, regs:['49','149','51','151']},
+  {s:'ММО', desc:'Мособлдума и министерства', k:9, regs:['50','90','150','190','750','790']},
+  {s:'АММ', desc:'ГУ МВД по МО, главы городских округов', k:9, regs:['50','90','150','190','750','790']},
+  {s:'АНО', desc:'Администрация Новгородской / Нижегородской / Новосибирской обл. / НАО', k:9, regs:['52','152','252','53','153','54','154','754','83']},
+  {s:'РНО', desc:'Руководство Новгородской / Нижегородской / Новосибирской обл. / НАО', k:9, regs:['52','152','252','53','153','54','154','754','83']},
+  {s:'АОО', desc:'Администрация Омской / Оренбургской / Орловской обл. (и фед. Москва)', k:9, regs:['55','155','56','156','57','157']},
+  {s:'РОО', desc:'Руководство Омской / Оренбургской / Орловской области', k:9, regs:['55','155','56','156','57','157']},
+  {s:'АПО', desc:'Администрация Пензенской / Псковской обл. / Пермского края', k:9, regs:['58','158','60','160','59','81','159']},
+  {s:'РПО', desc:'Руководство Пензенской / Псковской области', k:9, regs:['58','158','60','160']},
+  {s:'АРО', desc:'Администрация Ростовской / Рязанской области', k:9, regs:['61','161','761','62','162']},
+  {s:'РРО', desc:'Руководство Ростовской / Рязанской области', k:9, regs:['61','161','761','62','162']},
+  {s:'АТО', desc:'Администрация Тамбовской / Тверской / Томской / Тульской / Тюменской обл.', k:9, regs:['68','168','69','169','70','170','71','171','72','172']},
+  {s:'РТО', desc:'Руководство Тамбовской / Тверской / Томской / Тульской / Тюменской обл.', k:9, regs:['68','168','69','169','70','170','71','171','72','172']},
+  {s:'АУО', desc:'Администрация Ульяновской области', k:9, regs:['73','173']},
+  {s:'РУО', desc:'Руководство Ульяновской области', k:9, regs:['73','173']},
+  {s:'АЧО', desc:'Администрация Челябинской / Читинской обл. / Чукотки', k:9, regs:['74','174','774','75','175','87']},
+  {s:'РЧО', desc:'Руководство Челябинской области / Чукотки', k:9, regs:['74','174','774','87']},
+  {s:'АЗК', desc:'Администрация Забайкальского края', k:9, regs:['75','175']},
+  {s:'АЯО', desc:'Администрация Ярославской области / ЯНАО', k:9, regs:['76','176','89','189']},
+  {s:'РЯО', desc:'Руководство Ярославской области / ЯНАО', k:9, regs:['76','176','89','189']},
+  {s:'РЕО', desc:'Руководство Еврейской АО', k:9, regs:['79','179']},
+  {s:'МОХ', desc:'Исторически милиция и вневедомственная охрана ХМАО', k:8, regs:['86','186']},
+  {s:'ВОР', desc:'Популярная статусная серия ХМАО', k:8, regs:['86','186']},
+  {s:'АСВ', desc:'Правительство Севастополя', k:9, regs:['92','192']},
+  {s:'РСВ', desc:'Руководство Севастополя', k:9, regs:['92','192']},
+  {s:'АБР', desc:'Администрация Байконура', k:9, regs:['94']},
+  {s:'АДР', desc:'Администрация ДНР', k:8, regs:['80','180']},
+  {s:'АЛР', desc:'Администрация ЛНР', k:8, regs:['81','181']},
+  {s:'АЗО', desc:'Администрация Запорожской области', k:8, regs:['84','184']},
+  {s:'АХО', desc:'Администрация Херсонской области', k:8, regs:['85','185']},
+
+  // ================= ИСТОРИЧЕСКИЕ «БЛАТНЫЕ» (ВЕЗДЕ) =================
+  {s:'ААА', desc:'Блатная серия (Связи / Бизнес / Власть)', k:7, regs:['01','101','02','102','702','03','103','04','104','05','105','06','106','07','107','08','108','09','109','10','110','11','111','12','112','13','113','14','114','15','115','16','116','716','17','117','18','118','19','119','20','95','21','121','22','122','23','93','123','193','323','24','124','25','125','26','126','27','127','28','128','29','129','30','130','31','131','32','132','33','133','34','134','35','135','36','136','37','137','38','138','39','91','40','140','41','141','42','142','43','143','44','144','45','145','46','146','47','147','48','148','49','149','50','90','150','190','750','790','51','151','52','152','252','53','153','54','154','754','55','155','56','156','57','157','58','158','59','81','159','60','160','61','161','761','62','162','63','163','763','64','164','65','165','66','96','196','67','167','68','168','69','169','70','170','71','171','72','172','73','173','74','174','774','75','175','76','176','77','97','99','177','197','199','777','797','799','977','78','98','178','198','79','179','82','83','86','186','87','89','189','92','192','94']},
+  {s:'ООО', desc:'Блатная серия / Силовые ведомства', k:7, regs:['01','101','02','102','702','03','103','04','104','05','105','06','106','07','107','08','108','09','109','10','110','11','111','12','112','13','113','14','114','15','115','16','116','716','17','117','18','118','19','119','20','95','21','121','22','122','23','93','123','193','323','24','124','25','125','26','126','27','127','28','128','29','129','30','130','31','131','32','132','33','133','34','134','35','135','36','136','37','137','38','138','39','91','40','140','41','141','42','142','43','143','44','144','45','145','46','146','47','147','48','148','49','149','50','90','150','190','750','790','51','151','52','152','252','53','153','54','154','754','55','155','56','156','57','157','58','158','59','81','159','60','160','61','161','761','62','162','63','163','763','64','164','65','165','66','96','196','67','167','68','168','69','169','70','170','71','171','72','172','73','173','74','174','774','75','175','76','176','77','97','99','177','197','199','777','797','799','977','78','98','178','198','79','179','82','83','86','186','87','89','189','92','192','94']},
+  {s:'МММ', desc:'Блатная серия / Силовые ведомства', k:7, regs:['01','101','02','102','702','03','103','04','104','05','105','06','106','07','107','08','108','09','109','10','110','11','111','12','112','13','113','14','114','15','115','16','116','716','17','117','18','118','19','119','20','95','21','121','22','122','23','93','123','193','323','24','124','25','125','26','126','27','127','28','128','29','129','30','130','31','131','32','132','33','133','34','134','35','135','36','136','37','137','38','138','39','91','40','140','41','141','42','142','43','143','44','144','45','145','46','146','47','147','48','148','49','149','50','90','150','190','750','790','51','151','52','152','252','53','153','54','154','754','55','155','56','156','57','157','58','158','59','81','159','60','160','61','161','761','62','162','63','163','763','64','164','65','165','66','96','196','67','167','68','168','69','169','70','170','71','171','72','172','73','173','74','174','774','75','175','76','176','77','97','99','177','197','199','777','797','799','977','78','98','178','198','79','179','82','83','86','186','87','89','189','92','192','94']},
+  {s:'ККК', desc:'Блатная серия (Связи / Бизнес / Администрации)', k:7, regs:['05','105','23','93','123','193','323','24','124','34','134','36','136','39','91']},
+  {s:'РРР', desc:'Блатная серия (Связи / Бизнес / Администрации)', k:7, regs:['22','122','23','93','123','193','323','29','129','33','133','59','81','159','64','164','66','96','196']},
+  {s:'ТТТ', desc:'Блатная серия (Крупные ведомства / Бизнес)', k:7, regs:['03','103','16','116','716','30','130','42','142','70','170','72','172']},
+  {s:'ННН', desc:'Блатная серия (Связи / Бизнес)', k:7, regs:['25','125','52','152','252','54','154','754']},
+  {s:'ЕЕЕ', desc:'Блатная серия (Связи / Бизнес)', k:7, regs:['20','95']},
+  {s:'ХХХ', desc:'Блатная серия (Связи / Бизнес)', k:7, regs:['77','97','99','177','197','199','777','797','799','977']},
+  {s:'УУУ', desc:'Блатная серия (Связи / Бизнес)', k:7, regs:['77','97','99','177','197','199','777','797','799','977']},
+  {s:'ВВВ', desc:'Блатная серия (Связи / Бизнес)', k:7, regs:['25','125','47','147']}
+];
+
+const FAMOUS_SERIES_UA = [
+  // === ОБЩЕГОСУДАРСТВЕННЫЕ / ИСТОРИЧЕСКИЕ ===
+  {s:'АП', desc:'Адміністрація Президента', k:10, regs:['AA','KA']},
+  {s:'ВР', desc:'Верховна Рада', k:10, regs:['AA','KA']},
+  {s:'КМ', desc:'Кабінет Міністрів', k:10, regs:['AA','KA']},
+  {s:'КА', desc:'Апарати вищих органів влади / МВС', k:9, regs:['AA','KA']},
+  {s:'АА', desc:'Офіс Президента / ВР / КМ / СБУ', k:9, regs:['AA','KA']},
+  {s:'ІІ', desc:'Центральні апарати МВС / СБУ', k:8, regs:['AA','KA']},
+
+  // === РЕГИОНАЛЬНЫЕ СПЕЦСЕРИИ ===
+  {s:'АІ', desc:'Київська ОДА / облрада', k:8, regs:['AI','KI']},
+  {s:'АК', desc:'Верховна Рада / Рада Міністрів Криму', k:8, regs:['AK','KK']},
+  {s:'СН', desc:'Севастопольська адміністрація / флот', k:8, regs:['CH','IH']},
+  {s:'АВ', desc:'Вінницька ОДА / облрада', k:7, regs:['AB','KV']},
+  {s:'АС', desc:'Волинська ОДА / Луцьк', k:7, regs:['AC','KC']},
+  {s:'АЕ', desc:'Дніпропетровська ОДА / Дніпро', k:8, regs:['AE','KE']},
+  {s:'АН', desc:'Донецька ОДА / облрада', k:8, regs:['AH','KH']},
+  {s:'АМ', desc:'Житомирська ОДА / облрада', k:7, regs:['AM','KM']},
+  {s:'АО', desc:'Закарпатська ОДА / Ужгород', k:7, regs:['AO','KO']},
+  {s:'АР', desc:'Запорізька ОДА / Запоріжжя', k:8, regs:['AP','KR']},
+  {s:'АТ', desc:'Івано-Франківська ОДА', k:7, regs:['AT','KT']},
+  {s:'ВА', desc:'Кіровоградська ОДА / Кропивницький', k:7, regs:['BA','HA']},
+  {s:'ВВ', desc:'Луганська ОДА / облрада', k:8, regs:['BB','HB']},
+  {s:'ВС', desc:'Львівська ОДА / Львів', k:8, regs:['BC','HC']},
+  {s:'ВЕ', desc:'Миколаївська ОДА / Миколаїв', k:7, regs:['BE','HE']},
+  {s:'ВН', desc:'Одеська ОДА / Одеса / СБУ', k:8, regs:['BH','HH']},
+  {s:'ВІ', desc:'Полтавська ОДА / облрада', k:7, regs:['BI','HI']},
+  {s:'ВК', desc:'Рівненська ОДА / облрада', k:7, regs:['BK','HK']},
+  {s:'ВМ', desc:'Сумська ОДА / Суми', k:7, regs:['BM','HM']},
+  {s:'ВО', desc:'Тернопільська ОДА', k:7, regs:['BO','HO']},
+  {s:'АХ', desc:'Харківська ОДА / Харків / СБУ', k:8, regs:['AX','KX']},
+  {s:'ВТ', desc:'Херсонська ОДА', k:7, regs:['BT','HT']},
+  {s:'ВХ', desc:'Хмельницька ОДА', k:7, regs:['BX','HX']},
+  {s:'СА', desc:'Черкаська ОДА / Черкаси', k:7, regs:['CA','IA']},
+  {s:'СВ', desc:'Чернігівська ОДА', k:7, regs:['CB','IB']},
+  {s:'СЕ', desc:'Чернівецька ОДА / Чернівці', k:7, regs:['CE','IE']}
+];
+
+const RU_REGIONS = [
+  ['Москва', ['77','97','99','177','197','199','797','799','777','977','999']],
+  ['Санкт-Петербург', ['78','98','178','198']],
+  ['Московская область', ['50','90','150','190','250','550','750','790']],
+  ['Краснодарский край', ['23','93','123','193','223']],
+  ['Свердловская область', ['66','96','166','196','266']],
+  ['Республика Татарстан', ['16','116','716']],
+  ['Республика Башкортостан', ['02','102','702']],
+  ['Ростовская область', ['61','161','761']],
+  ['Самарская область', ['63','163','763']],
+  ['Нижегородская область', ['52','152','252']],
+  ['Челябинская область', ['74','174','774']],
+  ['Новосибирская область', ['54','154']],
+  ['Республика Адыгея', ['01']],
+  ['Республика Бурятия', ['03','103']],
+  ['Республика Алтай', ['04']],
+  ['Республика Дагестан', ['05','105']],
+  ['Республика Ингушетия', ['06']],
+  ['Кабардино-Балкария', ['07']],
+  ['Республика Калмыкия', ['08']],
+  ['Карачаево-Черкесия', ['09']],
+  ['Республика Карелия', ['10']],
+  ['Республика Коми', ['11']],
+  ['Республика Марий Эл', ['12']],
+  ['Республика Мордовия', ['13','113']],
+  ['Республика Саха (Якутия)', ['14']],
+  ['Северная Осетия — Алания', ['15']],
+  ['Республика Тыва', ['17']],
+  ['Удмуртская Республика', ['18']],
+  ['Республика Хакасия', ['19']],
+  ['Чеченская Республика', ['95']],
+  ['Чувашская Республика', ['21','121']],
+  ['Алтайский край', ['22','122']],
+  ['Красноярский край', ['24','88','124','184']],
+  ['Приморский край', ['25','125']],
+  ['Ставропольский край', ['26','126']],
+  ['Хабаровский край', ['27','127']],
+  ['Амурская область', ['28','128']],
+  ['Архангельская область', ['29','129']],
+  ['Астраханская область', ['30','130']],
+  ['Белгородская область', ['31','131']],
+  ['Брянская область', ['32','132']],
+  ['Владимирская область', ['33','133']],
+  ['Волгоградская область', ['34','134']],
+  ['Вологодская область', ['35','135']],
+  ['Воронежская область', ['36','136']],
+  ['Ивановская область', ['37','137']],
+  ['Иркутская область', ['38','138','188']],
+  ['Калининградская область', ['39','139']],
+  ['Калужская область', ['40','140']],
+  ['Камчатский край', ['41']],
+  ['Кемеровская область', ['42','142']],
+  ['Кировская область', ['43','143']],
+  ['Костромская область', ['44','144']],
+  ['Курганская область', ['45','145']],
+  ['Курская область', ['46','146']],
+  ['Ленинградская область', ['47','147']],
+  ['Липецкая область', ['48','148']],
+  ['Магаданская область', ['49','149']],
+  ['Мурманская область', ['51','151']],
+  ['Новгородская область', ['53','153']],
+  ['Омская область', ['55','155']],
+  ['Оренбургская область', ['56','156']],
+  ['Орловская область', ['57','157']],
+  ['Пензенская область', ['58','158']],
+  ['Пермский край', ['59','159']],
+  ['Псковская область', ['60','160']],
+  ['Рязанская область', ['62','162']],
+  ['Саратовская область', ['64','164']],
+  ['Сахалинская область', ['65','165']],
+  ['Смоленская область', ['67','167']],
+  ['Тамбовская область', ['68','168']],
+  ['Тверская область', ['69','169']],
+  ['Томская область', ['70','170']],
+  ['Тульская область', ['71','171']],
+  ['Тюменская область', ['72','172']],
+  ['Ульяновская область', ['73','173']],
+  ['Забайкальский край', ['75','80']],
+  ['Ярославская область', ['76','176']],
+  ['Еврейская АО', ['79']],
+  ['Республика Крым', ['82','182']],
+  ['Севастополь', ['92','192']],
+  ['Ханты-Мансийский АО', ['86','186']],
+  ['Чукотский АО', ['87']],
+  ['Ямало-Ненецкий АО', ['89']]
+];
+
+const UA_REGIONS = [
+  ['г. Киев', ['AA', 'KA']],
+  ['Киевская область', ['AI', 'KI']],
+  ['АР Крым', ['AK', 'KK']],
+  ['г. Севастополь', ['CH', 'IH']],
+  ['Винницкая область', ['AB', 'KV']],
+  ['Волынская область', ['AC', 'KC']],
+  ['Днепропетровская область', ['AE', 'KE']],
+  ['Донецкая область', ['AH', 'KH']],
+  ['Житомирская область', ['AM', 'KM']],
+  ['Закарпатская область', ['AO', 'KO']],
+  ['Запорожская область', ['AP', 'KR']],
+  ['Ивано-Франковская область', ['AT', 'KT']],
+  ['Кировоградская область', ['BA', 'HA']],
+  ['Луганская область', ['BB', 'HB']],
+  ['Львовская область', ['BC', 'HC']],
+  ['Николаевская область', ['BE', 'HE']],
+  ['Одесская область', ['BH', 'HH', 'ВН', 'НН']],
+  ['Полтавская область', ['BI', 'HI']],
+  ['Ровенская область', ['BK', 'HK']],
+  ['Сумская область', ['BM', 'HM']],
+  ['Тернопольская область', ['BO', 'HO']],
+  ['Харьковская область', ['AX', 'KX']],
+  ['Херсонская область', ['BT', 'HT']],
+  ['Хмельницкая область', ['BX', 'HX']],
+  ['Черкасская область', ['CA', 'IA']],
+  ['Черниговская область', ['CB', 'IB']],
+  ['Черновицкая область', ['CE', 'IE']]
+];
+
+const COUNTRIES = {
+  RU: { name: 'Россия', flag: '🇷🇺', regions: RU_REGIONS, letters: RU_LETTERS, famous: FAMOUS_SERIES_RU, format: 'ru' },
+  UA: { name: 'Украина', flag: '🇺🇦', regions: UA_REGIONS, letters: UA_LETTERS, famous: [], format: 'ua' }
+};
+
+function calcPlateRarity(p) {
+  if (p.famous) return 5;
+  
+  let score = 0;
+  const d = p.digits || '';
+  const l1 = p.l1 || '', l2 = p.l2 || '', l3 = p.l3 || '';
+
+  if (/^(\d)\1\1$/.test(d) && d[0] !== '0') score += 4; 
+  else if (/^[1-9]00$/.test(d) || ['001','002','003','007'].includes(d)) score += 3; 
+  else if (/^(\d)\1\d$/.test(d) || /^\d(\d)\1$/.test(d)) score += 2; 
+  else if (d === d.split('').reverse().join('') && d.length > 1) score += 2; 
+  else if (d.length === 4 && d[0] === d[2] && d[1] === d[3]) score += 2; 
+  else if (['123','321','456','789','012'].includes(d)) score += 1;
+
+  if (l1 === l2 && l2 === l3 && l1 !== '') score += 4; 
+  else if (l1 === l3 && l1 !== '') score += 3; 
+  else if ((l1 === l2 && l1 !== '') || (l2 === l3 && l2 !== '')) score += 2; 
+
+  if (p.plateType === 'military' || p.plateType === 'police' || p.plateType === 'diplomatic') score += 1;
+
+  if (p.plateType === 'truck') {
+      if (/^(\d)\1\1\1$/.test(d)) score += 3; 
+      else if (/^(\d)\1(\d)\1$/.test(d)) score += 2; 
+  }
+
+  if (score >= 9) return 5; 
+  if (score >= 7) return 4; 
+  if (score >= 5) return 3; 
+  if (score >= 3) return 2; 
+  if (score >= 1) return 1; 
+  return 0; 
+}
+
+function calcPlatePrice(p) {
+  const ranges = [
+    [300, 14999],       
+    [15000, 79999],     
+    [80000, 579999],    
+    [580000, 2199999],  
+    [2200000, 18999999],
+    [19000000, 67000000]
+  ];
+  
+  if (p.rarity === undefined) p.rarity = calcPlateRarity(p);
+  
+  const min = ranges[p.rarity][0];
+  const max = ranges[p.rarity][1];
+
+  const str = (p.main || '') + (p.reg || '') + (p.country || '');
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash |= 0; 
+  }
+  const rand = Math.abs(hash % 10000) / 10000;
+
+  let price = min + (max - min) * rand;
+
+  if (p.country === 'RU') {
+      if (['77','97','99','177','199'].includes(p.reg)) price *= 1.05;
+      else if (['78','98','178','198'].includes(p.reg)) price *= 1.02;
+  }
+
+  if (p.plateType === 'police') price *= 1.1;
+  if (p.plateType === 'diplomatic') price *= 1.2;
+  if (p.plateType === 'military') price *= 1.05;
+
+  return Math.round(Math.max(min, Math.min(max, price)) / 10) * 10;
+}
+
+function getPlateDescription(p) {
+  if (p.famous) return p.desc || 'Элитная серия';
+  if (p.plateType === 'police') return 'Полицейский номер';
+  if (p.plateType === 'military') return 'Военный номер';
+  if (p.plateType === 'diplomatic') return 'Дипломатический номер';
+  if (p.plateType === 'truck') return 'Грузовой номер';
+
+  const parts = [];
+  const d = p.digits || '';
+  const l1 = p.l1 || '', l2 = p.l2 || '', l3 = p.l3 || '';
+
+  if (/^(\d)\1\1$/.test(d)) parts.push("Три одинаковые цифры");
+  else if (['001','002','003','004','005','006','007','008','009'].includes(d)) parts.push("Красивые нули");
+  else if (/^[1-9]00$/.test(d)) parts.push("Круглый номер");
+  else if (/^(\d)\1\d$/.test(d) || /^\d(\d)\1$/.test(d)) parts.push("Парные цифры");
+  else if (d.length === 4 && d[0] === d[2] && d[1] === d[3]) parts.push("Повторяющиеся цифры");
+  else if (d === d.split('').reverse().join('') && d.length > 1) parts.push("Зеркальные цифры");
+  else if (['123','321','456','789','012'].includes(d)) parts.push("Последовательность");
+
+  if (l1 === l2 && l2 === l3 && l1 !== '') parts.push("Три одинаковые буквы");
+  else if (l1 === l3 && l1 !== '') parts.push("Палиндром букв");
+  else if ((l1 === l2 && l1 !== '') || (l2 === l3 && l2 !== '')) parts.push("Парные буквы");
+
+  return parts.length > 0 ? parts.join(" + ") : '';
+}
+
+function getPlateTag(p) {
+  if (p.famous) return 'Элитный';
+  if (p.plateType === 'police') return 'МВД';
+  if (p.plateType === 'military') return 'Военный';
+  if (p.plateType === 'diplomatic') return 'Дипломат';
+  if (p.plateType === 'truck') return 'Грузовой';
+  if (p.rarity >= 4) return 'Коллекционный';
+  if (p.rarity >= 2) return 'Красивый';
+  return 'Стандарт';
+}
+
+function getOwnedFamousPlates() {
+  const owned = new Set();
+  state.plates.forEach(p => { if (p.famous) owned.add(p.main + '|' + p.reg); });
+  state.garage.forEach(c => { if (c.plate && c.plate.famous) owned.add(c.plate.main + '|' + c.plate.reg); });
+  state.trophies.forEach(c => { if (c.plate && c.plate.famous) owned.add(c.plate.main + '|' + c.plate.reg); });
+  return owned;
+}
+
+function generatePlate(countryCode, regionIdx, plateType, attempt = 0) {
+  if (attempt > 50) return null;
+
+  const country = COUNTRIES[countryCode];
+  const region = country.regions[regionIdx] || country.regions[0];
+  const regionCode = pick(region[1]);
+  
+  let mainStr = '', digits = '', l1 = '', l2 = '', l3 = '';
+  
+  let plateObj = {
+    id: state.plateId++,
+    country: countryCode,
+    region: regionCode,
+    regionName: region[0],
+    plateType: plateType || 'standard',
+    carId: null,
+    famous: false,
+    fromTrophy: false
+  };
+
+  if (countryCode === 'RU') {
+    if (plateObj.plateType === 'standard') {
+        const famousPool = FAMOUS_SERIES_RU.filter(f => f.regs.includes(regionCode));
+        const ownedFamous = getOwnedFamousPlates();
+        const availableFamous = famousPool.filter(f => !ownedFamous.has(f.s + '001' + f.regs[0])); 
+        
+        if (availableFamous.length && Math.random() < 0.02) {
+            const f = pick(availableFamous);
+            digits = String(rnd(999) + 1).padStart(3, '0');
+            // Правильный формат: Буква + 3 цифры + 2 буквы (например: А 583 АА)
+            plateObj.main = f.s[0] + digits + f.s[1] + f.s[2]; 
+            plateObj.reg = pick(f.regs);
+            plateObj.famous = true;
+            plateObj.desc = f.desc;
+            plateObj.k = f.k;
+            plateObj.l1 = f.s[0]; plateObj.l2 = f.s[1]; plateObj.l3 = f.s[2];
+            plateObj.digits = digits;
+            plateObj.rarity = 5;
+            plateObj.price = calcPlatePrice(plateObj);
+            plateObj.tag = getPlateTag(plateObj);
+            return plateObj;
+        }
+    }
+
+    l1 = pick(country.letters.split(''));
+    l2 = pick(country.letters.split(''));
+    l3 = pick(country.letters.split(''));
+
+    if (plateObj.plateType === 'police') {
+        digits = String(rnd(9999) + 1).padStart(4, '0');
+        mainStr = l1 + digits;
+        plateObj.l1 = l1; plateObj.l2 = ''; plateObj.l3 = ''; plateObj.digits = digits;
+    } else if (plateObj.plateType === 'military') {
+        digits = String(rnd(9999) + 1).padStart(4, '0');
+        mainStr = digits + l1 + l2;
+        plateObj.l1 = l1; plateObj.l2 = l2; plateObj.l3 = ''; plateObj.digits = digits;
+    } else if (plateObj.plateType === 'diplomatic') {
+        const code = String(rnd(199) + 1).padStart(3, '0');
+        digits = String(rnd(999) + 1).padStart(3, '0');
+        mainStr = code + 'D' + digits;
+        plateObj.l1 = 'D'; plateObj.l2 = ''; plateObj.l3 = ''; plateObj.digits = digits;
+    } else if (plateObj.plateType === 'truck') {
+        digits = String(rnd(9999) + 1).padStart(4, '0');
+        mainStr = digits + ' ' + l1 + l2;
+        plateObj.l1 = l1; plateObj.l2 = l2; plateObj.l3 = ''; plateObj.digits = digits;
+    } else if (plateObj.plateType === 'commercial') {
+        digits = String(rnd(9999) + 1).padStart(4, '0');
+        mainStr = l1 + digits + l2;
+        plateObj.l1 = l1; plateObj.l2 = l2; plateObj.l3 = ''; plateObj.digits = digits;
+    } else {
+        const roll = Math.random();
+        if (roll < 0.03) digits = String(rnd(9) + 1).repeat(3);
+        else if (roll < 0.06) digits = '00' + String(rnd(9) + 1);
+        else if (roll < 0.10) digits = String(rnd(9) + 1) + '00';
+        else digits = String(rnd(999) + 1).padStart(3, '0');
+
+        if (Math.random() < 0.03) { l2 = l1; l3 = l1; }
+        else if (Math.random() < 0.08) l3 = l1;
+        else if (Math.random() < 0.15) l3 = l2;
+
+        mainStr = l1 + digits + l2 + l3;
+        plateObj.l1 = l1; plateObj.l2 = l2; plateObj.l3 = l3; plateObj.digits = digits;
+    }
+    plateObj.main = mainStr;
+    plateObj.reg = regionCode;
+
+  } else if (countryCode === 'UA') {
+    l1 = pick(country.letters.split(''));
+    l2 = pick(country.letters.split(''));
+    l3 = pick(country.letters.split(''));
+
+    if (plateObj.plateType === 'police' || plateObj.plateType === 'military') {
+        digits = String(rnd(9999) + 1).padStart(4, '0');
+        mainStr = digits + ' ' + l1 + l2;
+        plateObj.l1 = l1; plateObj.l2 = l2; plateObj.l3 = ''; plateObj.digits = digits;
+    } else if (plateObj.plateType === 'diplomatic') {
+        const code = String(rnd(199) + 1).padStart(3, '0');
+        digits = String(rnd(999) + 1).padStart(3, '0');
+        mainStr = code + ' ' + digits;
+        plateObj.l1 = ''; plateObj.l2 = ''; plateObj.l3 = ''; plateObj.digits = digits;
+    } else {
+        // === ЛОГИКА ДЛЯ ГРАЖДАНСКИХ (СТАНДАРТНЫХ) НОМЕРОВ УКРАИНЫ ===
+        const famousEndings = ['АА', 'ВР', 'КМ', 'АП', 'ІІ', 'ОО', 'ММ', 'КА'];
+        const digitsSpecial = ['0001', '0002', '0003', '0007', '0555', '0777', '0999'];
+
+        // 2% шанс на выпадение спецсерии
+        if (Math.random() < 0.02) {
+            const isNational = Math.random() < 0.3; // 30% от спецсерий - национальные
+
+            if (isNational) {
+                const f = pick(FAMOUS_SERIES_UA.filter(x => ['АП','ВР','КМ','КА','АА','ІІ'].includes(x.s)));
+                if (f) {
+                    digits = pick(digitsSpecial);
+                    if (['АП','ВР','КМ'].includes(f.s)) {
+                        mainStr = f.s + ' ' + digits; // Формат: АП 0001
+                    } else if (f.s === 'АА') {
+                        mainStr = 'АА ' + digits + ' ' + pick(famousEndings); // Формат: АА 0001 ВР
+                    } else {
+                        mainStr = '555 ' + digits.slice(0, 2) + ' ' + f.s; // Формат: 555 00 КА
+                    }
+                    plateObj.main = mainStr;
+                    plateObj.reg = pick(f.regs);
+                    plateObj.famous = true;
+                    plateObj.desc = f.desc;
+                    plateObj.k = f.k;
+                    plateObj.l1 = f.s[0] || 'A'; plateObj.l2 = f.s[1] || 'A'; plateObj.l3 = '';
+                    plateObj.digits = digits;
+                    plateObj.rarity = 5;
+                    plateObj.price = calcPlatePrice(plateObj);
+                    plateObj.tag = getPlateTag(plateObj);
+                    return plateObj;
+                }
+            } else {
+                // Региональные спецсерии (формат: АЕ 0001 АЕ или АЕ 0001 ОО)
+                const region = country.regions[regionIdx] || country.regions[0];
+                const f = pick(FAMOUS_SERIES_UA.filter(x => x.regs.includes(pick(region[1]))));
+                if (f) {
+                    digits = pick(['0001','0002','0003','0007','0777','0555','0999','1000']);
+                    const suffix = Math.random() < 0.6 ? f.s : pick(famousEndings);
+                    mainStr = f.s + ' ' + digits + ' ' + suffix;
+                    plateObj.main = mainStr;
+                    plateObj.reg = pick(f.regs);
+                    plateObj.famous = true;
+                    plateObj.desc = f.desc;
+                    plateObj.k = f.k;
+                    plateObj.l1 = f.s[0]; plateObj.l2 = f.s[1]; plateObj.l3 = suffix[0] || '';
+                    plateObj.digits = digits;
+                    plateObj.rarity = 5;
+                    plateObj.price = calcPlatePrice(plateObj);
+                    plateObj.tag = getPlateTag(plateObj);
+                    return plateObj;
+                }
+            }
+        }
+
+        // Обычная генерация, если спецсерия не выпала
+        digits = String(rnd(9999) + 1).padStart(4, '0');
+        
+        // Добавляем немного "красивых" обычных номеров
+        if (Math.random() < 0.03) digits = String(rnd(9) + 1).repeat(4); // 1111
+        else if (Math.random() < 0.06) digits = '00' + String(rnd(99) + 1).padStart(2, '0'); // 0012
+        else if (Math.random() < 0.1) digits = String(rnd(9) + 1) + '00' + String(rnd(9) + 1); // 1001
+
+        if (Math.random() < 0.05) l2 = l1; // Парные буквы
+
+        mainStr = regionCode + ' ' + digits + ' ' + l1 + l2;
+        plateObj.l1 = l1; plateObj.l2 = l2; plateObj.l3 = ''; plateObj.digits = digits;
+    }
+    plateObj.main = mainStr;
+    plateObj.reg = regionCode;
+  }
+
+  const allExisting = new Set();
+  state.plates.forEach(p => allExisting.add(p.main + '|' + p.reg + '|' + (p.country||'RU')));
+  state.garage.forEach(c => { if (c.plate) allExisting.add(c.plate.main + '|' + c.plate.reg + '|' + (c.plate.country||'RU')); });
+  state.trophies.forEach(c => { if (c.plate) allExisting.add(c.plate.main + '|' + c.plate.reg + '|' + (c.plate.country||'RU')); });
+  
+  const key = plateObj.main + '|' + plateObj.reg + '|' + plateObj.country;
+  if (allExisting.has(key)) {
+    return generatePlate(countryCode, regionIdx, plateType, attempt + 1);
+  }
+
+  plateObj.rarity = calcPlateRarity(plateObj);
+  plateObj.price = calcPlatePrice(plateObj);
+  plateObj.desc = getPlateDescription(plateObj);
+  plateObj.tag = getPlateTag(plateObj);
+
+  return plateObj;
+}
+
+function plateHTML(p, size) {
+  let extraClass = '';
+  if (p.country === 'RU') {
+    if (p.plateType === 'police') extraClass = 'police';
+    else if (p.plateType === 'military') extraClass = 'military';
+    else if (p.plateType === 'diplomatic') extraClass = 'diplomatic';
+    else if (p.plateType === 'commercial') extraClass = 'commercial';
+  } else if (p.country === 'UA') {
+    if (p.plateType === 'military') extraClass = 'military';
+    else if (p.plateType === 'police') extraClass = 'police';
+    else if (p.plateType === 'diplomatic') extraClass = 'diplomatic';
+  }
+
+  let inner = '';
+
+  if (p.country === 'RU') {
+      inner = `<div class="plate-main-text">${p.main}</div>
+               <div class="plate-reg"><div class="cod">${p.reg}</div><div class="flag"></div></div>`;
+  } else if (p.country === 'UA') {
+      inner = `<div class="plate-left"><div class="flag"></div><div class="cod">UA</div></div>
+               <div class="plate-main-text">${p.main}</div>`;
+  }
+
+  return `<div class="plate-container plate-${p.country || 'RU'} ${extraClass} ${size || ''}">${inner}</div>`;
+}
+
+const UPGRADES = [
+  {id:'discount', name:'Скидка на прокрутку', desc:'−5% к цене прокрутки машины за уровень', base:100000, max:5},
+  {id:'dealer',   name:'Связи с дилером',     desc:'+10% к цене продажи машины за уровень',  base:90000,  max:5},
+  {id:'plate',    name:'Знакомый в ГИБДД',    desc:'−10% к цене прокрутки номеров за уровень', base:70000, max:5}
+];
+
+const state = {
+  money: START_MONEY,
+  garage: [],
+  trophies: [],
+  plates: [],
+  upgrades: {discount:0, dealer:0, plate:0},
+  nextId: 1,
+  plateId: 1,
+  rebirths: 0,
+  pityE: 0,
+  pityL: 0,
+  pityM: 0,
+  carImages: {},
+  playerName: ''
+};
+
+let curTab = 'menu';
+let selCountry = 'RU';
+let selRegion = 0;
+let selPlateType = 'standard';
+let selSpinCount = 1;
+let pendingCars = [];
+let pendingPlate = null;
+let spinning = false;
+let plateSpinning = false;
+
+let garageSort = 'date';
+let garageSearchBrand = '';
+let garageSearchModel = '';
+let trophiesSearchText = '';
+let platesSearchText = '';
+let imgSearchQuery = ''; 
+
+let platesSort = 'date';
+let platesCountryFilter = 'all';
+let platesRegionFilter = 'all';
+
+let pickerSort = 'date';
+let pickerCountryFilter = 'all';
+let pickerRegionFilter = 'all';
+
+let pickerCarId = null;
+
+const spinCost  = () => Math.round(SPIN_COST * (1 - 0.05 * (state.upgrades.discount || 0)) / 1000) * 1000;
+const plateCost = () => Math.round(PLATE_COST * (1 - 0.10 * (state.upgrades.plate || 0)) / 1000) * 1000;
+const sellPrice = v => Math.round(v * (SELL_RATE + 0.10 * (state.upgrades.dealer || 0)));
+
+function getRarWeights() {
+   const r = state.rebirths;
+   return [
+      Math.max(100, 600 - r * 100),
+      Math.max(100, 250 + r * 20),
+      100 + r * 30,
+      35 + r * 20,
+      12 + r * 10,
+      3 + r * 5
+   ];
+}
+
+function updatePityUI() {
+  const setBar = (id, current, max) => {
+    const pct = Math.min(100, (current / max) * 100);
+    const bar = document.getElementById(id + 'Bar');
+    const left = document.getElementById(id + 'Left');
+    if(bar) bar.style.width = pct + '%';
+    if(left) left.textContent = max - current;
+  };
+  setBar('pityE', state.pityE, 20);
+  setBar('pityL', state.pityL, 70);
+  setBar('pityM', state.pityM, 200);
+}
+
+const SAVE_KEY = 'garage777_v1';
+// --- НАЧАЛО БЛОКА INDEXEDDB ---
+const DB_NAME = 'Garage777DB';
+const STORE_NAME = 'gameState';
+
+function getDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, 1);
+        request.onupgradeneeded = e => e.target.result.createObjectStore(STORE_NAME);
+        request.onsuccess = e => resolve(e.target.result);
+        request.onerror = e => reject(e.target.error);
+    });
+}
+
+async function saveDB(data) {
+    const db = await getDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        tx.objectStore(STORE_NAME).put(data, SAVE_KEY);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+    });
+}
+
+async function loadDB() {
+    const db = await getDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const req = tx.objectStore(STORE_NAME).get(SAVE_KEY);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+}
+
+// --- НОВЫЕ ФУНКЦИИ СОХРАНЕНИЯ ЧЕРЕЗ FIREBASE ---
+
+// Функция сохранения
+window.save = async function() {
+  if (!window.firebaseUser) {
+    console.warn("Нет пользователя для сохранения! Ждём авторизации...");
+    return;
+  }
+  
+  try {
+    const userDocRef = window.firestoreDoc(window.firebaseDB, "users", window.firebaseUser.uid);
+    await window.firestoreSetDoc(userDocRef, state, { merge: true });
+    console.log("💾 Игра сохранена в облако!");
+  } catch (e) {
+    console.error("Ошибка сохранения в Firebase:", e);
+    // Если облако недоступно (например, нет интернета), сохраняем локально
+    saveDB(state).catch(err => console.error("Локальное сохранение тоже упало:", err));
+  }
+};
+
+// Функция загрузки
+window.load = async function() {
+  if (!window.firebaseUser) {
+    console.warn("Нет пользователя для загрузки!");
+    return;
+  }
+
+  try {
+      const userDocRef = window.firestoreDoc(window.firebaseDB, "users", window.firebaseUser.uid);
+      const docSnap = await window.firestoreGetDoc(userDocRef);
+
+    if (docSnap.exists()) {
+      const s = docSnap.data();
+      console.log("📂 Сохранение загружено из облака!");
+      
+      state.money = s.money || START_MONEY;
+      state.garage = Array.isArray(s.garage) ? s.garage : [];
+      state.trophies = Array.isArray(s.trophies) ? s.trophies : [];
+      state.plates = Array.isArray(s.plates) ? s.plates : [];
+      state.upgrades = Object.assign({discount:0, dealer:0, plate:0}, s.upgrades || {});
+      state.nextId = s.nextId || 1;
+      state.plateId = s.plateId || 1;
+      state.rebirths = s.rebirths || 0;
+      state.pityE = s.pityE || 0;
+      state.pityL = s.pityL || 0;
+      state.pityM = s.pityM || 0;
+      state.carImages = Object.assign({}, DEFAULT_CAR_IMAGES, s.carImages || {});
+      state.playerName = s.playerName || '';
+    } else {
+      console.log("🆕 Новый игрок. Создаём первое сохранение...");
+      
+      // Пытаемся загрузить старые локальные сохранения (IndexedDB)
+      let localSave = await loadDB();
+      if (!localSave) {
+          const raw = localStorage.getItem(SAVE_KEY);
+          if (raw) localSave = JSON.parse(raw);
+      }
+
+      if (localSave && typeof localSave.money === 'number') {
+          console.log("🔄 Миграция локального сохранения в облако...");
+          state.money = localSave.money;
+          state.garage = localSave.garage || [];
+          state.trophies = localSave.trophies || [];
+          state.plates = localSave.plates || [];
+          state.upgrades = localSave.upgrades || {discount:0, dealer:0, plate:0};
+      } else {
+          state.money = START_MONEY;
+      }
+      
+      await save();
+    }
+
+    // Обновляем интерфейс после загрузки
+    updateWallet();
+    updatePityUI();
+    renderSpinMulti();
+    $('#plateSection').innerHTML = plateSectionHTML();
+    bindPlateSection();
+    renderTab('menu');
+    console.log("✅ Игра готова!");
+
+  } catch (e) {
+    console.error("Ошибка загрузки из Firebase:", e);
+    // Если интернет отвалился, грузим локально
+    const s = await loadDB();
+    if (s) {
+        state.money = s.money;
+        // ... остальные поля
+    }
+  }
+};
+
+
+function toast(msg, cls){
+  const box = $('#toasts');
+  const d = document.createElement('div');
+  d.className = 'toast' + (cls ? ' ' + cls : '');
+  d.textContent = msg;
+  box.appendChild(d);
+  setTimeout(() => { d.style.opacity = '0'; d.style.transform = 'translateY(-8px)'; }, 2400);
+  setTimeout(() => d.remove(), 2800);
+}
+
+function openModal(title, body, foot){
+  $('#modalTitle').innerHTML = title;
+  $('#modalBody').innerHTML = body;
+  $('#modalFoot').innerHTML = foot || '';
+  $('#modal').classList.add('on');
+}
+function closeModal(){ $('#modal').classList.remove('on'); }
+
+function confirmDialog(title, message, onConfirm){
+  openModal(
+    title,
+    `<div style="padding:20px 0;text-align:center;font-size:14px;line-height:1.6">${message}</div>`,
+    `<button class="btn" data-act="close">Отмена</button>
+     <button class="btn btn-red" id="confirmOkBtn">Подтвердить</button>`
+  );
+  const btn = document.getElementById('confirmOkBtn');
+  if(btn) btn.onclick = () => { closeModal(); onConfirm(); };
+}
+
+function pickCar(){
+  if(state.pityM >= 200) { state.pityM = 0; return pick(CARS.filter(c => c.r === 5)); }
+  if(state.pityL >= 70)  { state.pityL = 0; return pick(CARS.filter(c => c.r === 4)); }
+  if(state.pityE >= 20)  { state.pityE = 0; return pick(CARS.filter(c => c.r === 3)); }
+
+  const weights = getRarWeights();
+  const total = weights.reduce((a, b) => a + b, 0);
+  let x = Math.random() * total;
+  let r = 0;
+  for(let i = 0; i < weights.length; i++){
+    x -= weights[i];
+    if(x <= 0) { r = i; break; }
+  }
+
+  const pool = CARS.filter(c => c.r === r);
+  return pick(pool.length ? pool : CARS);
+}
+
+function pickFakeCar(){
+  const weights = [600, 250, 100, 35, 12, 3];
+  const total = weights.reduce((a, b) => a + b, 0);
+  let x = Math.random() * total;
+  let r = 0;
+  for (let i = 0; i < weights.length; i++) {
+      x -= weights[i];
+      if (x <= 0) { r = i; break; }
+  }
+  const pool = CARS.filter(c => c.r === r);
+  return pick(pool.length ? pool : CARS);
+}
+
+function renderSpinMulti() {
+    const maxSpins = Math.min(6, state.rebirths + 1);
+    const row = $('#spinMultiRow');
+    if (!row) return;
+
+    if (maxSpins === 1) {
+        row.innerHTML = '';
+        selSpinCount = 1;
+        updateSpinButtonText();
+        return;
+    }
+
+    let html = '';
+    for (let i = 1; i <= maxSpins; i++) {
+        const cost = spinCost() * i;
+        html += `<button class="btn ${selSpinCount === i ? 'btn-go' : ''}" data-act="setspin" data-val="${i}">
+            x${i} <span style="font-size:10px; opacity:0.8">(${num(cost)} ₽)</span>
+        </button>`;
+    }
+    row.innerHTML = html;
+    updateSpinButtonText();
+}
+
+function updateSpinButtonText() {
+    const cost = spinCost() * selSpinCount;
+    const priceEl = $('#spinPrice');
+    if(priceEl) priceEl.textContent = `· ${num(cost)} ₽ (x${selSpinCount})`;
+}
+
+function cardHTML(car){
+  return `<div class="card">
+    <div class="rbar" style="background:${RARS[car.r].color}"></div>
+    <div class="art">${getCarVisual(car)}</div>
+    <div class="ttl">
+      <div class="b">${car.brand}</div>
+      <div class="m">${car.model}</div>
+      <div class="p">${num(car.price)} ₽</div>
+    </div>
+  </div>`;
+}
+
+function renderResultCard(car, index) {
+  return `
+    <div id="resCard_${index}" class="res-card" style="--rc:${RARS[car.r].color}">
+      <div class="res-art">${getCarVisual(car)}</div>
+      <div class="res-info">
+        <div class="res-brand">${car.brand}</div>
+        <div class="res-model">${car.model}</div>
+        <div><span class="res-rarity" style="background:color-mix(in srgb,var(--rc) 16%,transparent);color:var(--rc);border:1px solid color-mix(in srgb,var(--rc) 45%,transparent)">${RARS[car.r].name}</span></div>
+        <div class="res-price-row">
+          <div>
+            <div class="res-price-lbl">Стоимость</div>
+            <div class="res-price">${fmt(car.price)}</div>
+          </div>
+        </div>
+        <div class="res-actions">
+          <button class="btn btn-go" onclick="sellPendingCar(${index})">Продать за ${num(sellPrice(car.price))} ₽</button>
+          <button class="btn btn-gold" onclick="keepPendingCar(${index})">Отложить</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function doSpin(){
+  if(spinning) return;
+
+  const cost = spinCost() * selSpinCount;
+
+  if(state.money < cost){ toast('Недостаточно денег для прокрутки', 'err'); return; }
+
+  if (pendingCars.length > 0) {
+    let added = 0;
+    pendingCars.forEach(car => {
+      if (car) {
+        state.garage.push({
+          id: state.nextId++,
+          brand: car.brand,
+          model: car.model,
+          price: car.price,
+          body: car.body,
+          color: car.color,
+          img: car.img,
+          r: car.r,
+          isMilitary: car.isMilitary,
+          plate: null,
+          fromTrophy: false
+        });
+        added++;
+      }
+    });
+
+    if (added > 0) toast(`Машин убрано в гараж: ${added}`);
+    pendingCars = [];
+
+    $('#resContent').style.display = 'none';
+    $('#resGlobalActions').style.display = 'none';
+    $('#resEmpty').style.display = 'flex';
+
+    if(added > 0) refreshGarageList();
+  }
+
+  spinning = true;
+  state.money -= cost;
+
+  for (let i = 0; i < selSpinCount; i++) {
+      state.pityE++;
+      state.pityL++;
+      state.pityM++;
+  }
+
+  updateWallet();
+  updatePityUI();
+  save();
+
+  const btn = $('#spinBtn');
+  btn.disabled = true;
+  
+  // Безопасное обновление текста кнопки вместо несуществующего #spHint
+  const priceSpan = $('#spinPrice');
+  if (priceSpan) priceSpan.textContent = ' · Крутится...';
+
+  const winCars = [];
+  for (let i = 0; i < selSpinCount; i++) {
+      winCars.push(pickCar());
+  }
+
+  const container = $('#roulettesContainer');
+  const cols = Math.min(3, selSpinCount);
+  container.style.setProperty('--cols', cols);
+  
+  let html = '';
+  for (let i = 0; i < selSpinCount; i++) {
+      html += `
+      <div class="track-wrapper">
+          <div class="strip-title" style="padding: 8px 12px; font-size:10px;"><span>Лента ${i+1}</span></div>
+	<div class="strip" id="strip_${i}">
+    		<div class="track" id="track_${i}"></div>
+	</div>
+          <div class="roadline" style="margin-top: 6px; height: 8px;"></div>
+      </div>`;
+  }
+  container.innerHTML = html;
+
+  const N = 60;
+  const winIdx = 52;
+
+  for (let i = 0; i < selSpinCount; i++) {
+      const items = [];
+      for(let j = 0; j < N; j++) {
+          if (j === winIdx) {
+              items.push(winCars[i]);
+          } else {
+              items.push(pickFakeCar());
+          }
+      }
+      const track = document.getElementById(`track_${i}`);
+      track.innerHTML = items.map(cardHTML).join('');
+      track.style.transition = 'none';
+      track.style.transform = 'translateX(0)';
+  }
+
+  // force reflow
+  if (document.getElementById('track_0')) {
+      void document.getElementById('track_0').offsetWidth;
+  }
+
+  for (let i = 0; i < selSpinCount; i++) {
+      const track = document.getElementById(`track_${i}`);
+      const strip = document.getElementById(`strip_${i}`);
+      
+      const stripRect = strip.getBoundingClientRect();
+      const winnerEl = track.children[winIdx].getBoundingClientRect();
+      const blockCenter = (winnerEl.left + winnerEl.right) / 2;
+      const stripCenter = stripRect.left + stripRect.width / 2;
+      const delta = blockCenter - stripCenter;
+
+      track.style.transition = 'transform 4.8s cubic-bezier(.13,.75,.14,1)';
+      track.style.transform = `translateX(${-delta}px)`;
+  }
+
+  await sleep(4950);
+
+  showResults(winCars);
+
+  spinning = false;
+  btn.disabled = false;
+  
+  // Возвращаем нормальный текст цены на кнопку
+  updateSpinButtonText();
+}
+
+function showResults(cars){
+  pendingCars = cars.slice();
+
+  $('#resEmpty').style.display = 'none';
+  const resContainer = $('#resContent');
+  resContainer.innerHTML = '';
+  resContainer.style.display = 'grid';
+  $('#resGlobalActions').style.display = 'block';
+
+  cars.forEach((car, index) => {
+    resContainer.insertAdjacentHTML('beforeend', renderResultCard(car, index));
+  });
+
+  if(cars.some(c => c.r >= 4)) toast('🔥 Выпала редкая машина!', 'gold');
+}
+
+function checkAndClearResult() {
+  if (pendingCars.length && pendingCars.every(c => c === null)) {
+    pendingCars = [];
+    $('#resContent').style.display = 'none';
+    $('#resGlobalActions').style.display = 'none';
+    $('#resEmpty').style.display = 'flex';
+  }
+}
+
+function updateWallet(){
+  $('#money').textContent = fmt(state.money);
+  updateSpinButtonText();
+}
+
+function refreshGarageList() {
+  const cont = $('#garageListContainer');
+  if (!cont) return;
+  cont.innerHTML = getGarageListHTML();
+  const cnt = $('#garageCount');
+  if (cnt) {
+    const total = state.garage.reduce((s, c) => s + c.price, 0);
+    cnt.textContent = `${state.garage.length} авто · ${fmt(total)}`;
+  }
+}
+
+function refreshTrophiesList() {
+  const cont = $('#trophiesListContainer');
+  if (!cont) return;
+  cont.innerHTML = getTrophiesListHTML();
+  const cnt = $('#trophiesCount');
+  if (cnt) cnt.textContent = `${state.trophies.length} авто`;
+}
+
+function refreshPlatesList() {
+  const cont = $('#platesInvContainer');
+  if (cont) cont.innerHTML = getPlatesListHTML();
+}
+
+async function doSpinPlate(){
+  if(plateSpinning) return;
+
+  const cost = plateCost();
+  if(state.money < cost){ toast('Недостаточно денег для прокрутки номера', 'err'); return; }
+
+  if(pendingPlate){
+    state.plates.push(pendingPlate);
+    pendingPlate = null;
+    refreshPlatesList();
+  }
+
+  plateSpinning = true;
+  state.money -= cost;
+  updateWallet();
+  save();
+
+  const win = generatePlate(selCountry, selRegion, selPlateType);
+
+  if (!win) {
+      toast('Ошибка: не удалось сгенерировать уникальный номер', 'err');
+      plateSpinning = false;
+      return;
+  }
+
+  setTimeout(() => {
+      pendingPlate = win;
+      $('#plateSection').innerHTML = plateSectionHTML();
+      bindPlateSection();
+      
+      const pEl = $('#plateResultBox').querySelector('.plate-container');
+      if (pEl) {
+          pEl.classList.add('pop-anim');
+          if (win.rarity === 5) pEl.classList.add('glow-fancy');
+          else if (win.plateType === 'police') pEl.classList.add('glow-police');
+          else if (win.plateType === 'military') pEl.classList.add('glow-military');
+          else if (win.plateType === 'diplomatic') pEl.classList.add('glow-diplomatic');
+      }
+      
+      if(win.famous) toast('⭐ Фартовый номер: ' + win.main, 'gold');
+      plateSpinning = false;
+  }, 150);
+}
+
+function menuHTML(){
+  const total = state.garage.reduce((s, c) => s + c.price, 0);
+  const platesTotal = state.plates.reduce((s, p) => s + p.price, 0);
+  const user = window.firebaseUser;
+
+  // Блок аккаунта
+  let accountBlock = '';
+  if (user) {
+    if (user.isAnonymous) {
+      const guestId = window.guestDisplayId || 'Guest-XXXXX';
+      const displayName = state.playerName || guestId;
+      accountBlock = `
+        <div class="upg" style="border-left: 4px solid #aeb9c6">
+          <div class="info">
+            <h4>Аккаунт: ${displayName}</h4>
+            <div class="d">Гостевой режим (сохранения только в этом браузере)</div>
+          </div>
+          <button class="btn btn-gold" onclick="linkGoogleAccount()">Привязать Google</button>
+        </div>`;
+    } else {
+      const displayName = state.playerName || user.displayName || 'Игрок';
+      accountBlock = `
+        <div class="upg" style="border-left: 4px solid var(--go)">
+          <div class="info">
+            <h4>Аккаунт: ${displayName}</h4>
+            <div class="d">${user.email} (Google)</div>
+          </div>
+          <button class="btn" onclick="promptNickname()">Сменить ник</button>
+        </div>`;
+    }
+  }
+
+  return `
+    <div class="sect-title"><h3>Профиль</h3></div>
+    ${accountBlock}
+    <button class="btn btn-red" onclick="logoutUser()" style="width:100%; margin-bottom:16px;">Выйти из аккаунта</button>
+
+    <div class="upg">
+      <div class="info">
+        <h4>Баланс</h4>
+        <div class="d">Деньги на прокрутки и улучшения</div>
+        <div class="price">${fmt(state.money)}</div>
+      </div>
+    </div>
+    <div class="upg">
+      <div class="info">
+        <h4>Стоимость прокрутки</h4>
+        <div class="d">Машина / номер</div>
+        <div class="price">${num(spinCost())} ₽ · ${num(plateCost())} ₽</div>
+      </div>
+    </div>
+    <div class="upg" style="border-left: 4px solid #ff4d6d">
+      <div class="info">
+        <h4>Перерождения (Уровень ${state.rebirths})</h4>
+        <div class="d">Макс. уровень улучшений: ${5 + state.rebirths}</div>
+      </div>
+    </div>
+    <div class="upg">
+      <div class="info">
+        <h4>Коллекция</h4>
+        <div class="d">Машин: ${state.garage.length} · Номеров: ${state.plates.length} · Трофеев: ${state.trophies.length}</div>
+        <div class="price">${fmt(total + platesTotal)}</div>
+      </div>
+    </div>
+    <div class="sect-title" style="margin-top:18px"><h3>Сброс</h3></div>
+    <button class="btn btn-red" data-act="reset" style="width:100%">Сбросить прогресс</button>
+  `;
+}
+
+function getGarageListHTML(){
+  let listCars = [...state.garage];
+  if (garageSort === 'price') listCars.sort((a, b) => b.price - a.price);
+  else listCars.sort((a, b) => b.id - a.id);
+
+  if (garageSearchBrand) {
+    const q = garageSearchBrand.toLowerCase();
+    listCars = listCars.filter(c => c.brand.toLowerCase().includes(q));
+  }
+  if (garageSearchModel) {
+    const q = garageSearchModel.toLowerCase();
+    listCars = listCars.filter(c => c.model.toLowerCase().includes(q));
+  }
+
+  if (!listCars.length) return '<div class="empty-box">Ничего не найдено по запросу.</div>';
+
+  return listCars.map(c => {
+    const plate = c.plate || null;
+    const truckTag = c.body === 'truck' ? '<span class="tag truck">Грузовое авто</span>' : '';
+    const milTag = c.isMilitary ? '<span class="tag on">Военный</span>' : '';
+
+    const plateBtn = plate 
+        ? `<button class="btn btn-red" data-act="unequip" data-id="${c.id}">Снять номер</button>` 
+        : `<button class="btn btn-gold" data-act="pickplate" data-id="${c.id}">Номер</button>`;
+
+    const sellBtn = c.fromTrophy 
+        ? `<button class="btn btn-red" data-act="deletecar" data-id="${c.id}">Удалить</button>`
+        : `<button class="btn btn-red" data-act="sellcar" data-id="${c.id}">Продать</button>`;
+
+    return `<div class="gcar" style="--rc:${RARS[c.r].color}">
+      <div class="art">${getCarVisual(c)}</div>
+      <div>
+        <div class="sub">${c.brand}</div>
+        <h4>${c.model} ${truckTag} ${milTag} ${c.fromTrophy ? '<span class="tag trophy">Трофей</span>' : ''}</h4>
+        <div class="rowplate">${plate ? plateHTML(plate, 'sm') : '<span style="font-size:11px;color:var(--mut)">Без номера</span>'}</div>
+        <div class="prc">${fmt(c.price)}</div>
+        <div class="acts">
+          <button class="btn btn-gold" data-act="totrophy" data-id="${c.id}">В трофеи</button>
+          ${plateBtn}
+          ${sellBtn}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function garageHTML(){
+  if(!state.garage.length){
+    return `<div class="sect-title"><h3>Гараж</h3><span class="cnt">0 авто</span></div>
+      <div class="empty-box">Гараж пуст.<br>Крути рулетку и забирай машины сюда.</div>`;
+  }
+  const total = state.garage.reduce((s, c) => s + c.price, 0);
+
+  return `
+    <div class="sect-title"><h3>Гараж</h3><span class="cnt" id="garageCount">${state.garage.length} авто · ${fmt(total)}</span></div>
+    <div class="sel-row">
+        <select id="garageSortSel">
+            <option value="date" ${garageSort === 'date' ? 'selected' : ''}>По дате (новые)</option>
+            <option value="price" ${garageSort === 'price' ? 'selected' : ''}>По цене (дорогие)</option>
+        </select>
+        <button class="btn btn-red" data-act="sellallgarage" style="padding: 10px 16px;">Продать всё</button>
+    </div>
+    <div class="sel-row">
+        <input type="text" id="garageBrandSearch" placeholder="Марка..." value="${garageSearchBrand}">
+        <input type="text" id="garageModelSearch" placeholder="Модель..." value="${garageSearchModel}">
+    </div>
+    <div id="garageListContainer">${getGarageListHTML()}</div>`;
+}
+
+function getTrophiesListHTML(){
+  let list = [...state.trophies];
+  if (trophiesSearchText) {
+    const q = trophiesSearchText.toLowerCase();
+    list = list.filter(c =>
+      c.brand.toLowerCase().includes(q) ||
+      c.model.toLowerCase().includes(q) ||
+      (c.plate && c.plate.main && c.plate.main.toLowerCase().includes(q))
+    );
+  }
+  if (!list.length) return '<div class="empty-box">Ничего не найдено.</div>';
+  return list.map(c => {
+    const plate = c.plate || null;
+    const truckTag = c.body === 'truck' ? '<span class="tag truck">Грузовое авто</span>' : '';
+    const milTag = c.isMilitary ? '<span class="tag on">Военный</span>' : '';
+
+    const plateBtn = plate 
+        ? `<button class="btn btn-red" data-act="unequip" data-id="${c.id}">Снять номер</button>` 
+        : `<button class="btn btn-gold" data-act="pickplate" data-id="${c.id}">Номер</button>`;
+
+    return `<div class="gcar" style="--rc:${RARS[c.r].color}; border-left-color: var(--gold);">
+      <div class="art">${getCarVisual(c)}</div>
+      <div>
+        <div class="sub">${c.brand}</div>
+        <h4>${c.model} ${truckTag} ${milTag} <span class="tag trophy">Трофей</span></h4>
+        <div class="rowplate">${plate ? plateHTML(plate, 'sm') : '<span style="font-size:11px;color:var(--mut)">Без номера</span>'}</div>
+        <div class="prc">${fmt(c.price)}</div>
+        <div class="acts">
+          <button class="btn btn-go" data-act="untrophy" data-id="${c.id}">Вернуть в гараж</button>
+          ${plateBtn}
+          <button class="btn btn-red" data-act="deltrophycar" data-id="${c.id}">Удалить</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function trophiesHTML(){
+  if(!state.trophies.length){
+    return `<div class="sect-title"><h3>Трофеи</h3><span class="cnt">0 авто</span></div>
+      <div class="empty-box">Трофеи пусты.<br>Добавляйте сюда лучшие машины из гаража, чтобы сохранить их навсегда.</div>`;
+  }
+  return `<div class="sect-title"><h3>Трофеи (защищены от сброса)</h3><span class="cnt" id="trophiesCount">${state.trophies.length} авто</span></div>
+    <div class="sel-row">
+        <input type="text" id="trophySearch" placeholder="Поиск по названию или номеру..." value="${trophiesSearchText}">
+    </div>
+    <div id="trophiesListContainer">${getTrophiesListHTML()}</div>`;
+}
+
+function getPlatesListHTML() {
+  if (!state.plates.length) return '<div class="empty-box">Номеров пока нет. Крути номерную ленту выше!</div>';
+
+  let listPlates = [...state.plates];
+
+  // Фильтр по стране
+  if (platesCountryFilter !== 'all') {
+    listPlates = listPlates.filter(p => (p.country || 'RU') === platesCountryFilter);
+  }
+  // Фильтр по региону
+  if (platesRegionFilter !== 'all') {
+    listPlates = listPlates.filter(p => p.reg === platesRegionFilter);
+  }
+  // Поиск
+  if (platesSearchText) {
+    const q = platesSearchText.toLowerCase();
+    listPlates = listPlates.filter(p => p.main.toLowerCase().includes(q) || p.reg.includes(q));
+  }
+
+  // Сортировка
+  if (platesSort === 'price-desc') listPlates.sort((a, b) => b.price - a.price);
+  else if (platesSort === 'price-asc') listPlates.sort((a, b) => a.price - b.price);
+  else listPlates.sort((a, b) => b.id - a.id); // По дате (новые)
+
+  if (!listPlates.length) return '<div class="empty-box">Ничего не найдено по фильтрам.</div>';
+
+  return listPlates.map(p => {
+    let rarColor = PLATE_RARS[p.rarity] ? PLATE_RARS[p.rarity].color : '#aeb9c6';
+    let rarName = PLATE_RARS[p.rarity] ? PLATE_RARS[p.rarity].name : 'Обычный';
+    const isCursed = p.fromTrophy;
+    
+    return `<div class="plItem">
+      <div class="plItem-header">
+        ${plateHTML(p, 'sm')}
+        <span class="prc">${fmt(p.price)}</span>
+      </div>
+      <div style="display:flex; gap:6px; align-items:center; margin-top:6px; flex-wrap:wrap;">
+        <span class="tag" style="color:${rarColor}; border:1px solid ${rarColor}66; background:${rarColor}22; font-weight:800;">${rarName}</span>
+        <span class="tag">${p.tag || 'Стандарт'}</span>
+        ${isCursed ? '<span class="tag cursed">Из трофеев</span>' : ''}
+      </div>
+      <div class="desc">${p.desc}</div>
+      <div class="acts" style="margin-top:9px;">
+        ${isCursed 
+            ? `<button class="btn btn-red" data-act="delplateid" data-id="${p.id}">Удалить</button>`
+            : `<button class="btn btn-go" data-act="sellplateid" data-id="${p.id}">Продать за ${num(p.price)} ₽</button>`
+        }
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function platesInvHTML() {
+  // Собираем уникальные регионы для выпадающего списка
+  const uniqueRegions = [...new Set(state.plates.map(p => p.reg))].filter(Boolean).sort();
+  const regionOpts = uniqueRegions.map(r => `<option value="${r}" ${platesRegionFilter === r ? 'selected' : ''}>${r}</option>`).join('');
+
+  return `
+    <div class="sect-title"><h3>Мои номера</h3></div>
+    
+    <div class="filters-grid">
+        <select id="platesSortFilter">
+            <option value="date" ${platesSort === 'date' ? 'selected' : ''}>По дате</option>
+            <option value="price-desc" ${platesSort === 'price-desc' ? 'selected' : ''}>Сначала дорогие</option>
+            <option value="price-asc" ${platesSort === 'price-asc' ? 'selected' : ''}>Сначала дешёвые</option>
+        </select>
+        <select id="platesCountryFilter">
+            <option value="all" ${platesCountryFilter === 'all' ? 'selected' : ''}>Все страны</option>
+            <option value="RU" ${platesCountryFilter === 'RU' ? 'selected' : ''}>🇷🇺 Россия</option>
+            <option value="UA" ${platesCountryFilter === 'UA' ? 'selected' : ''}>🇺🇦 Украина</option>
+        </select>
+    </div>
+    <div class="sel-row">
+        <select id="platesRegionFilter" style="flex:1;">
+            <option value="all" ${platesRegionFilter === 'all' ? 'selected' : ''}>Все регионы</option>
+            ${regionOpts}
+        </select>
+        <button class="btn btn-red" data-act="sellallplates" style="padding: 10px 16px;">Продать всё</button>
+    </div>
+    <div class="sel-row">
+        <input type="text" id="platesSearchInput" placeholder="Поиск по номеру..." value="${platesSearchText}" style="flex: 1;">
+    </div>
+    <div id="platesInvContainer">${getPlatesListHTML()}</div>
+  `;
+}
+
+function plateSectionHTML() {
+    const regionOpts = COUNTRIES[selCountry].regions.map(([name], i) =>
+    `<option value="${i}"${i === selRegion ? ' selected' : ''}>${name}</option>`).join('');
+    
+    return `
+    <div class="roulette-wrap">
+      <section id="spinner-plates" style="flex:1;position:relative;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:0 0 14px;box-shadow:var(--sh);overflow:hidden;min-width:0;">
+        <div class="strip-title"><span>РУЛЕТКА НОМЕРОВ</span><span id="plateHint">нажми «Крутить»</span></div>
+        
+        <div style="padding: 20px;">
+            <div class="plate-controls">
+              <select id="plateCountrySel">
+                <option value="RU" ${selCountry === 'RU' ? 'selected' : ''}>🇷🇺 Россия</option>
+                <option value="UA" ${selCountry === 'UA' ? 'selected' : ''}>🇺🇦 Украина</option>
+              </select>
+              <select id="plateTypeSel">
+                <option value="standard" ${selPlateType === 'standard' ? 'selected' : ''}>Стандартные</option>
+                <option value="truck" ${selPlateType === 'truck' ? 'selected' : ''}>Грузовые</option>
+                <option value="police" ${selPlateType === 'police' ? 'selected' : ''}>МВД</option>
+                <option value="military" ${selPlateType === 'military' ? 'selected' : ''}>Военные</option>
+                <option value="diplomatic" ${selPlateType === 'diplomatic' ? 'selected' : ''}>Дипломатические</option>
+                <option value="commercial" ${selPlateType === 'commercial' ? 'selected' : ''}>Коммерческие</option>
+              </select>
+              <select id="regSel">${regionOpts}</select>
+            </div>
+            
+            <div id="plateResultBox" class="plate-result-box ${pendingPlate ? 'has-result' : ''}">
+              ${pendingPlate ? `
+                <div style="margin-bottom: 20px;">${plateHTML(pendingPlate, 'lg')}</div>
+                <div style="font-size:12px; font-weight:800; color:${PLATE_RARS[pendingPlate.rarity].color}; text-transform:uppercase; letter-spacing:1px; margin-bottom:5px;">${PLATE_RARS[pendingPlate.rarity].name}</div>
+                <div class="desc" style="color:var(--gold); font-style:italic; margin-bottom: 10px;">${pendingPlate.desc}</div>
+                <div style="font-family:'Russo One'; font-size:26px; margin-bottom: 20px;">${fmt(pendingPlate.price)}</div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
+                  <button class="btn btn-gold" data-act="keepplate">В коллекцию</button>
+                  <button class="btn btn-go" data-act="sellplate">Продать за ${num(pendingPlate.price)} ₽</button>
+                </div>
+              ` : `
+                <div style="color:var(--mut); font-size:14px; margin-bottom: 20px;">Здесь появится номер</div>
+              `}
+            </div>
+            
+            <div style="margin-top: 20px; text-align: center;">
+                <button class="btn btn-go" id="pSpinBtn" style="width:100%; max-width: 300px; padding: 16px; font-family:'Russo One'; font-size: 18px; letter-spacing: .08em;">КРУТИТЬ НОМЕР<span style="font-family:Manrope; display:block; font-size:12px; font-weight:800; letter-spacing:.12em; margin-top:2px;">· ${num(plateCost())} ₽</span></button>
+            </div>
+        </div>
+      </section>
+    </div>
+    `;
+}
+
+function bindPlateSection() {
+  const spinBtn = $('#pSpinBtn');
+  if(spinBtn) spinBtn.addEventListener('click', doSpinPlate);
+
+  const countrySel = $('#plateCountrySel');
+  if(countrySel) countrySel.addEventListener('change', e => {
+    selCountry = e.target.value;
+    selRegion = 0;
+    $('#plateSection').innerHTML = plateSectionHTML();
+    bindPlateSection();
+  });
+
+  const typeSel = $('#plateTypeSel');
+  if(typeSel) typeSel.addEventListener('change', e => { selPlateType = e.target.value; });
+
+  const regSel = $('#regSel');
+  if(regSel) regSel.addEventListener('change', e => { selRegion = +e.target.value; });
+}
+
+function collHTML(){
+  const byRar = [0,0,0,0,0,0];
+  state.garage.forEach(c => byRar[c.r]++);
+  state.trophies.forEach(c => byRar[c.r]++);
+  const total = state.garage.reduce((s, c) => s + c.price, 0) + state.trophies.reduce((s, c) => s + c.price, 0);
+  const best = state.garage.concat(state.trophies).sort((a, b) => b.price - a.price)[0];
+
+  const rows = RARS.map(r => `
+    <div class="upg" style="border-left:4px solid ${r.color}">
+      <div class="info">
+        <h4 style="color:${r.color}">${r.name}</h4>
+        <div class="d">Собрано машин</div>
+      </div>
+      <div class="price">${byRar[r.id]}</div>
+    </div>`).join('');
+
+  return `
+    <div class="sect-title"><h3>Коллекция</h3></div>
+    <div class="upg"><div class="info"><h4>Всего машин</h4><div class="d">Общая стоимость гаража и трофеев</div>
+      <div class="price">${state.garage.length + state.trophies.length} · ${fmt(total)}</div></div></div>
+    <div class="upg"><div class="info"><h4>Лучшая машина</h4>
+      <div class="d">${best ? best.brand + ' ' + best.model : '—'}</div>
+      <div class="price">${best ? fmt(best.price) : '—'}</div></div></div>
+    <div class="upg"><div class="info"><h4>Номера</h4><div class="d">Всего в коллекции</div>
+      <div class="price">${state.plates.length} · ${fmt(state.plates.reduce((s, p) => s + p.price, 0))}</div></div></div>
+    <div class="sect-title" style="margin-top:18px"><h3>По редкости</h3></div>
+    ${rows}`;
+}
+
+function upgHTML(){
+  const maxLvl = 5 + state.rebirths;
+
+  let rebirthBtn = '';
+  if (state.rebirths < 5) {
+    const cost = REBIRTH_COSTS[state.rebirths];
+    rebirthBtn = `
+      <div class="upg" style="border-left: 4px solid #ff4d6d">
+        <div class="info">
+          <h4>Перерождение (Уровень ${state.rebirths} → ${state.rebirths + 1})</h4>
+          <div class="d">Сбросить всё (кроме трофеев). Лимит улучшений до ${maxLvl + 1} уровня. Шансы на топ-авто растут.</div>
+          <div class="price">${fmt(cost)}</div>
+        </div>
+        <button class="btn btn-red" data-act="rebirth">Переродиться</button>
+      </div>
+    `;
+  } else {
+    rebirthBtn = `<div class="upg" style="border-left: 4px solid #ff4d6d"><div class="info"><h4>Перерождение</h4><div class="d">Достигнут максимальный уровень (5).</div></div></div>`;
+  }
+
+  return `<div class="sect-title"><h3>Улучшения (макс. ур. ${maxLvl})</h3><span class="cnt">${fmt(state.money)}</span></div>` +
+    UPGRADES.map(u => {
+      const lvl = state.upgrades[u.id] || 0;
+      const maxed = lvl >= maxLvl;
+      const cost = u.base * (lvl + 1);
+      return `<div class="upg">
+        <div class="info">
+          <h4>${u.name} <span style="color:var(--mut);font-size:11px">ур. ${lvl}/${maxLvl}</span></h4>
+          <div class="d">${u.desc}</div>
+          <div class="price">${maxed ? 'Максимум' : fmt(cost)}</div>
+        </div>
+        <button class="btn btn-go" data-act="upg" data-id="${u.id}" ${maxed ? 'disabled' : ''}>Купить</button>
+      </div>`;
+    }).join('') + `<div class="sect-title" style="margin-top:18px"><h3>Престиж</h3></div>` + rebirthBtn;
+}
+
+function imagesHTML() {
+    let searchVal = typeof imgSearchQuery !== 'undefined' ? imgSearchQuery : '';
+    
+    // Добавляем кнопку экспорта над поиском
+    let html = `
+        <div style="margin-bottom: 12px;">
+            <button class="btn btn-gold" data-act="exportimages" style="width: 100%; padding: 12px; font-size: 13px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Экспорт кода фото (для вставки в игру)
+            </button>
+        </div>
+        <div class="sel-row"><input type="text" id="imgSearch" placeholder="Поиск машины..." value="${searchVal}"></div>
+    `;
+    
+    html += '<div class="img-grid">';
+    
+    const carsList = typeof CARS !== 'undefined' ? CARS : (typeof RAW_CARS !== 'undefined' ? RAW_CARS : []);
+    let filtered = carsList;
+    
+    if (searchVal) {
+        const q = searchVal.toLowerCase();
+        filtered = carsList.filter(c => {
+            const brand = c.brand || c[0] || '';
+            const model = c.model || c[1] || '';
+            return (brand + ' ' + model).toLowerCase().includes(q);
+        });
+    }
+
+    if (filtered.length === 0) {
+        html += '<div class="empty-box" style="grid-column: 1/-1;">Ничего не найдено</div>';
+    }
+
+    filtered.forEach(c => {
+        const brand = c.brand || c[0];
+        const model = c.model || c[1];
+        const key = brand + '|' + model;
+        const imgSrc = (state && state.carImages && state.carImages[key]) ? state.carImages[key] : '';
+        
+        html += `<div class="img-card">
+            <div class="img-thumb">${imgSrc ? `<img src="${imgSrc}">` : '<span class="no-img">Нет фото</span>'}</div>
+            <div style="font-size:10px; font-weight:800; text-align:center; margin: 4px 0;">${brand} ${model}</div>
+            <div class="upload-btn-wrapper">
+                <button class="btn btn-gold">Загрузить</button>
+                <input type="file" accept="image/*" class="car-img-input" data-key="${key}" />
+            </div>
+        </div>`;
+    });
+    html += '</div>';
+    return html;
+}
+function renderTab(tab){
+  curTab = tab;
+  document.querySelectorAll('.dtab').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+
+  const titles = {menu:'Меню', garage:'Гараж', platesInv:'Номера', trophies:'Трофеи', coll:'Коллекция', upg:'Улучшения', images:'Фото'};
+  $('#dTitle').textContent = titles[tab] || 'Меню';
+
+  const body = $('#dBody');
+  if(tab === 'menu')   body.innerHTML = menuHTML();
+  if(tab === 'garage'){ body.innerHTML = garageHTML(); bindGarage(); }
+  if(tab === 'platesInv'){ body.innerHTML = platesInvHTML(); bindPlatesInv(); }
+  if(tab === 'trophies'){ body.innerHTML = trophiesHTML(); bindTrophies(); }
+  if(tab === 'coll')   body.innerHTML = collHTML();
+  if(tab === 'upg')    body.innerHTML = upgHTML();
+  if(tab === 'images'){ body.innerHTML = imagesHTML(); bindImages(); }
+}
+
+function bindGarage(){
+    const sortSel = $('#garageSortSel');
+    if(sortSel) sortSel.addEventListener('change', e => {
+        garageSort = e.target.value;
+        renderTab('garage');
+    });
+
+    const brandInput = $('#garageBrandSearch');
+    if(brandInput) brandInput.addEventListener('input', e => {
+        garageSearchBrand = e.target.value;
+        const c = $('#garageListContainer');
+        if (c) c.innerHTML = getGarageListHTML();
+    });
+
+    const modelInput = $('#garageModelSearch');
+    if(modelInput) modelInput.addEventListener('input', e => {
+        garageSearchModel = e.target.value;
+        const c = $('#garageListContainer');
+        if (c) c.innerHTML = getGarageListHTML();
+    });
+}
+
+function bindPlatesInv() {
+    const searchInput = $('#platesSearchInput');
+    if (searchInput) searchInput.addEventListener('input', e => {
+        platesSearchText = e.target.value;
+        const c = $('#platesInvContainer');
+        if (c) c.innerHTML = getPlatesListHTML();
+    });
+
+    const sortSel = $('#platesSortFilter');
+    if (sortSel) sortSel.addEventListener('change', e => {
+        platesSort = e.target.value;
+        $('#platesInvContainer').innerHTML = getPlatesListHTML();
+    });
+
+    const countrySel = $('#platesCountryFilter');
+    if (countrySel) countrySel.addEventListener('change', e => {
+        platesCountryFilter = e.target.value;
+        renderTab('platesInv'); // Перерисовываем вкладку, чтобы обновить регионы
+    });
+
+    const regionSel = $('#platesRegionFilter');
+    if (regionSel) regionSel.addEventListener('change', e => {
+        platesRegionFilter = e.target.value;
+        $('#platesInvContainer').innerHTML = getPlatesListHTML();
+    });
+}
+
+function bindTrophies(){
+    const trophyInput = $('#trophySearch');
+    if(trophyInput) trophyInput.addEventListener('input', e => {
+        trophiesSearchText = e.target.value;
+        const c = $('#trophiesListContainer');
+        if (c) c.innerHTML = getTrophiesListHTML();
+    });
+}
+
+function bindImages() {
+    const search = document.getElementById('imgSearch');
+    if (search) {
+        search.addEventListener('input', function(e) {
+            window.imgSearchQuery = e.target.value;
+            
+            const body = document.getElementById('dBody');
+            if (body) {
+                body.innerHTML = imagesHTML();
+                bindImages();
+                
+                const newSearch = document.getElementById('imgSearch');
+                if (newSearch) {
+                    newSearch.focus();
+                    newSearch.setSelectionRange(newSearch.value.length, newSearch.value.length);
+                }
+            }
+        });
+    }
+
+    const fileInputs = document.querySelectorAll('.car-img-input');
+    fileInputs.forEach(input => {
+        input.addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                const key = e.target.dataset.key;
+                const reader = new FileReader();
+                
+                reader.onload = function(ev) {
+                    if (!state.carImages) state.carImages = {};
+                    state.carImages[key] = ev.target.result;
+                    
+                    if (typeof save === 'function') save();
+                    
+                    const body = document.getElementById('dBody');
+                    if (body) {
+                        body.innerHTML = imagesHTML();
+                        bindImages();
+                    }
+                    if (typeof toast === 'function') toast('Фото обновлено!');
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+    });
+}
+
+function openPlatePicker(carId){
+  const car = state.garage.find(c => c.id === carId) || state.trophies.find(c => c.id === carId);
+  if (!car) return;
+
+  // Сбрасываем фильтры при открытии
+  pickerSort = 'date';
+  pickerCountryFilter = 'all';
+  pickerRegionFilter = 'all';
+
+  const modalBody = `
+    <div class="filters-grid">
+        <select id="pickSortFilter">
+            <option value="date">По дате</option>
+            <option value="price-desc">Сначала дорогие</option>
+            <option value="price-asc">Сначала дешёвые</option>
+        </select>
+        <select id="pickCountryFilter">
+            <option value="all">Все страны</option>
+            <option value="RU">🇷🇺 Россия</option>
+            <option value="UA">🇺🇦 Украина</option>
+        </select>
+    </div>
+    <div class="sel-row">
+        <select id="pickRegionFilter" style="flex:1;">
+            <option value="all">Все регионы</option>
+        </select>
+    </div>
+    <div class="sel-row" style="margin-bottom: 12px;">
+        <input type="text" id="pickPlateSearch" placeholder="Поиск по номеру..." style="flex:1;">
+    </div>
+    <div id="pickPlateListContainer"></div>
+  `;
+
+  openModal('Выбрать номер для ' + car.brand + ' ' + car.model, modalBody,
+    `<button class="btn" data-act="close">Отмена</button>`);
+
+  const renderPickerList = () => {
+    const searchText = $('#pickPlateSearch').value.toLowerCase();
+    
+    // 1. Сначала собираем подходящие по типу авто
+    let compatible = state.plates.filter(p => {
+      if (p.carId !== null) return false;
+
+      if (car.isMilitary) {
+          if (!['military', 'police', 'diplomatic'].includes(p.plateType)) return false;
+      } else {
+          if (['military', 'police'].includes(p.plateType)) return false;
+          
+          if (car.body === 'truck') {
+              if (!['truck', 'commercial', 'diplomatic'].includes(p.plateType)) return false;
+          } else {
+              if (!['standard', 'commercial', 'diplomatic'].includes(p.plateType)) return false;
+          }
+      }
+      return true;
+    });
+
+    // 2. Обновляем список доступных регионов (только для подходящих номеров)
+    const uniqueRegions = [...new Set(compatible.map(p => p.reg))].filter(Boolean).sort();
+    const regionSel = $('#pickRegionFilter');
+    // Сохраняем текущий выбор, если он еще доступен
+    const currentRegion = regionSel.value;
+    regionSel.innerHTML = `<option value="all">Все регионы</option>` + 
+        uniqueRegions.map(r => `<option value="${r}" ${currentRegion === r ? 'selected' : ''}>${r}</option>`).join('');
+    
+    // 3. Применяем фильтры
+    let filtered = compatible;
+    if (pickerCountryFilter !== 'all') {
+        filtered = filtered.filter(p => (p.country || 'RU') === pickerCountryFilter);
+    }
+    if (regionSel.value !== 'all') {
+        filtered = filtered.filter(p => p.reg === regionSel.value);
+    }
+    if (searchText) {
+        filtered = filtered.filter(p => p.main.toLowerCase().includes(searchText) || p.reg.includes(searchText));
+    }
+
+    // 4. Сортировка
+    if (pickerSort === 'price-desc') filtered.sort((a, b) => b.price - a.price);
+    else if (pickerSort === 'price-asc') filtered.sort((a, b) => a.price - b.price);
+    else filtered.sort((a, b) => b.id - a.id);
+
+    if (!filtered.length) {
+      $('#pickPlateListContainer').innerHTML = '<div class="empty-box" style="padding:15px;font-size:12px;">Нет подходящих номеров.</div>';
+      return;
+    }
+
+    $('#pickPlateListContainer').innerHTML = filtered.map(p => `
+      <div class="pickItem">
+        <div style="flex:1">${plateHTML(p, 'sm')}</div>
+        <div style="font-size:12px;color:var(--gold);font-family:'Russo One'">${fmt(p.price)}</div>
+        <button class="btn btn-go" data-act="equip" data-car="${carId}" data-plate="${p.id}">Поставить</button>
+      </div>
+    `).join('');
+  };
+
+  renderPickerList();
+
+  // Вешаем обработчики на фильтры
+  $('#pickPlateSearch').addEventListener('input', renderPickerList);
+  $('#pickSortFilter').addEventListener('change', e => { pickerSort = e.target.value; renderPickerList(); });
+  $('#pickCountryFilter').addEventListener('change', e => { pickerCountryFilter = e.target.value; renderPickerList(); });
+  $('#pickRegionFilter').addEventListener('change', renderPickerList);
+}
+
+function handleAction(e){
+  const el = e.target.closest('[data-act]');
+  if(!el) return;
+  const act = el.dataset.act;
+  const id = el.dataset.id;
+
+  if(act === 'close'){ closeModal(); return; }
+
+  if(act === 'setspin'){
+    selSpinCount = +el.dataset.val;
+    renderSpinMulti();
+    return;
+  }
+
+  if(act === 'sellpending'){
+    const idx = +el.dataset.index;
+    const car = pendingCars[idx];
+    if (!car) return;
+
+    const amount = sellPrice(car.price);
+    state.money += amount;
+    updateWallet();
+    toast('Продано за ' + fmt(amount), 'gold');
+
+    pendingCars[idx] = null;
+    const card = el.closest('.res-card');
+    card.style.opacity = '0.3';
+    card.style.pointerEvents = 'none';
+    el.textContent = 'Продано';
+    el.className = 'btn';
+    save();
+    checkAndClearResult();
+    return;
+  }
+
+  if(act === 'keeppending'){
+    const idx = +el.dataset.index;
+    const car = pendingCars[idx];
+    if (!car) return;
+
+    state.garage.push({
+      id: state.nextId++,
+      brand: car.brand,
+      model: car.model,
+      price: car.price,
+      body: car.body,
+      color: car.color,
+      img: car.img,
+      r: car.r,
+      isMilitary: car.isMilitary,
+      plate: null,
+      fromTrophy: false
+    });
+
+    pendingCars[idx] = null;
+    const card = el.closest('.res-card');
+    card.style.opacity = '0.3';
+    card.style.pointerEvents = 'none';
+    el.textContent = 'В гараже';
+    el.className = 'btn';
+    toast('Машина отложена в гараж');
+    save();
+
+    refreshGarageList();
+    checkAndClearResult();
+    return;
+  }
+
+  if(act === 'sellallpending'){
+    if (!pendingCars.length) return;
+    let total = 0, count = 0;
+    pendingCars.forEach(car => {
+      if (car) { total += sellPrice(car.price); count++; }
+    });
+    if (count > 0) {
+      state.money += total;
+      updateWallet();
+      toast(`Продано ${count} авто за ${fmt(total)}`, 'gold');
+    } else {
+      toast('Все машины уже проданы', 'err');
+    }
+
+    pendingCars = [];
+    $('#resContent').style.display = 'none';
+    $('#resGlobalActions').style.display = 'none';
+    $('#resEmpty').style.display = 'flex';
+    save();
+    return;
+  }
+
+  if(act === 'keepallpending'){
+    if (!pendingCars.length) return;
+    let added = 0;
+    pendingCars.forEach(car => {
+      if (car) {
+        state.garage.push({
+          id: state.nextId++,
+          brand: car.brand,
+          model: car.model,
+          price: car.price,
+          body: car.body,
+          color: car.color,
+          img: car.img,
+          r: car.r,
+          isMilitary: car.isMilitary,
+          plate: null,
+          fromTrophy: false
+        });
+        added++;
+      }
+    });
+
+    if (added > 0) {
+      toast(`В гараж отложено: ${added}`);
+    } else {
+      toast('Нечего откладывать', 'err');
+    }
+
+    pendingCars = [];
+    $('#resContent').style.display = 'none';
+    $('#resGlobalActions').style.display = 'none';
+    $('#resEmpty').style.display = 'flex';
+    save();
+    refreshGarageList();
+    return;
+  }
+
+  if(act === 'sellallgarage'){
+    if (!state.garage.length) return;
+    confirmDialog('Продать весь гараж',
+      'Вы уверены, что хотите продать ВСЕ обычные машины из гаража?<br><br>Трофеи не будут проданы. Номера, установленные на них, вернутся в коллекцию номеров.',
+      () => {
+        let total = 0;
+        const carsToSell = state.garage.filter(c => !c.fromTrophy);
+        
+        carsToSell.forEach(c => {
+          if (c.plate) { c.plate.carId = null; state.plates.push(c.plate); }
+          total += sellPrice(c.price);
+        });
+        
+        state.money += total;
+        state.garage = state.garage.filter(c => c.fromTrophy);
+        
+        updateWallet();
+        save();
+        toast('Весь обычный гараж продан за ' + fmt(total), 'gold');
+        renderTab('garage');
+      });
+    return;
+  }
+
+  if(act === 'sellallplates'){
+    if (!state.plates.length) return;
+    confirmDialog('Продать все номера',
+      'Вы уверены, что хотите продать ВСЕ свободные номера? (Номера из трофеев будут удалены)',
+      () => {
+        let total = 0;
+        const normalPlates = state.plates.filter(p => !p.fromTrophy);
+        normalPlates.forEach(p => total += p.price);
+        
+        state.money += total;
+        state.plates = state.plates.filter(p => p.fromTrophy);
+        
+        updateWallet();
+        save();
+        toast('Все обычные номера проданы за ' + fmt(total), 'gold');
+        refreshPlatesList();
+      });
+    return;
+  }
+
+  if(act === 'upg'){
+    const u = UPGRADES.find(x => x.id === id);
+    if(!u) return;
+    const lvl = state.upgrades[u.id] || 0;
+    if(lvl >= 5 + state.rebirths) return;
+    const cost = u.base * (lvl + 1);
+    if(state.money < cost){ toast('Недостаточно денег', 'err'); return; }
+    state.money -= cost;
+    state.upgrades[u.id] = lvl + 1;
+    updateWallet();
+    save();
+    toast(u.name + ' → уровень ' + (lvl + 1));
+    renderTab('upg');
+    return;
+  }
+
+  if(act === 'sellcar'){
+    const idx = state.garage.findIndex(c => c.id === +id);
+    if(idx < 0) return;
+    const car = state.garage[idx];
+
+    if (car.fromTrophy) {
+        toast('Трофейные машины нельзя продать, только удалить!', 'err'); return;
+    }
+
+    if(car.plate && typeof car.plate === 'object' && car.plate.main) {
+      car.plate.carId = null;
+      state.plates.push(car.plate);
+    } else {
+      car.plate = null;
+    }
+
+    const amount = sellPrice(car.price);
+    state.money += amount;
+    state.garage.splice(idx, 1);
+    updateWallet();
+    save();
+    toast('Продано за ' + fmt(amount), 'gold');
+    refreshGarageList();
+    return;
+  }
+
+  if(act === 'deletecar'){
+    const idx = state.garage.findIndex(c => c.id === +id);
+    if(idx < 0) return;
+    confirmDialog('Удаление', 'Вы уверены, что хотите удалить эту машину? Номер, установленный на ней, также будет удалён. Вы не получите деньги.', () => {
+        state.garage.splice(idx, 1);
+        save();
+        toast('Машина удалена');
+        refreshGarageList();
+    });
+    return;
+  }
+
+  if(act === 'deltrophycar'){
+      const idx = state.trophies.findIndex(c => c.id === +id);
+      if(idx < 0) return;
+      confirmDialog('Удаление трофея', 'Вы уверены, что хотите навсегда удалить этот трофей? Номер, установленный на нём, также будет удалён.', () => {
+          state.trophies.splice(idx, 1);
+          save();
+          toast('Трофей удалён');
+          refreshTrophiesList();
+      });
+      return;
+  }
+
+  if(act === 'totrophy'){
+    const idx = state.garage.findIndex(c => c.id === +id);
+    if(idx < 0) return;
+    const car = state.garage[idx];
+    car.fromTrophy = true;
+    state.trophies.push(car);
+    state.garage.splice(idx, 1);
+    save();
+    toast('Авто добавлено в трофеи');
+    refreshGarageList();
+    return;
+  }
+
+  if(act === 'untrophy'){
+    const idx = state.trophies.findIndex(c => c.id === +id);
+    if(idx < 0) return;
+    const car = state.trophies[idx];
+    car.fromTrophy = true; 
+    state.garage.push(car);
+    state.trophies.splice(idx, 1);
+    save();
+    toast('Авто возвращено в гараж (теперь его можно только удалить)');
+    refreshTrophiesList();
+    return;
+  }
+
+  if(act === 'pickplate'){
+    openPlatePicker(+id);
+    return;
+  }
+
+  if(act === 'equip'){
+    const carId = +el.dataset.car;
+    const plateId = +el.dataset.plate;
+    const car = state.garage.find(c => c.id === carId) || state.trophies.find(c => c.id === carId);
+    const plateIdx = state.plates.findIndex(p => p.id === plateId);
+    if(!car || plateIdx < 0) return;
+
+    const plate = state.plates[plateIdx];
+
+    if (car.isMilitary) {
+        if (!['military', 'police', 'diplomatic'].includes(plate.plateType)) {
+            toast('На спецтехнику ставятся только военные/полицейские/дипломатические номера!', 'err'); return;
+        }
+    } else {
+        if (['military', 'police'].includes(plate.plateType)) {
+            toast('На гражданскую машину нельзя ставить военные/полицейские номера!', 'err'); return;
+        }
+        
+        if (car.body === 'truck' && !['truck', 'commercial', 'diplomatic'].includes(plate.plateType)) {
+            toast('На грузовик можно ставить только грузовые номера!', 'err'); return;
+        }
+        if (car.body !== 'truck' && plate.plateType === 'truck') {
+            toast('Грузовые номера не подходят для этого авто!', 'err'); return;
+        }
+    }
+
+    state.plates.splice(plateIdx, 1);
+
+    if(car.plate){
+      car.plate.carId = null;
+      state.plates.push(car.plate);
+    }
+
+    plate.carId = car.id;
+    car.plate = plate;
+
+    save();
+    closeModal();
+    toast('Номер ' + plate.main + ' установлен');
+    renderTab(curTab);
+    refreshGarageList();
+    refreshTrophiesList();
+    refreshPlatesList();
+    return;
+  }
+
+  if(act === 'unequip'){
+    const carId = +el.dataset.id;
+    const car = state.garage.find(c => c.id === carId) || state.trophies.find(c => c.id === carId);
+    if(!car || !car.plate) return;
+
+    car.plate.carId = null;
+    if (car.fromTrophy) car.plate.fromTrophy = true;
+    state.plates.push(car.plate);
+    car.plate = null;
+
+    save();
+    closeModal();
+    toast('Номер снят');
+    
+    if (curTab === 'garage') refreshGarageList();
+    if (curTab === 'trophies') refreshTrophiesList();
+    refreshPlatesList();
+    return;
+  }
+
+  if(act === 'keepplate'){
+    if (pendingPlate) {
+        state.plates.push(pendingPlate);
+        const kept = pendingPlate;
+        pendingPlate = null;
+        save();
+        toast('Номер ' + kept.main + ' в коллекции', 'gold');
+
+        $('#plateSection').innerHTML = plateSectionHTML();
+        bindPlateSection();
+        refreshPlatesList();
+    }
+    return;
+  }
+
+  if(act === 'sellplate'){
+    if (pendingPlate) {
+        const price = pendingPlate.price;
+        state.money += price;
+        const sold = pendingPlate;
+        pendingPlate = null;
+        updateWallet();
+        save();
+        toast('Номер продан за ' + fmt(price), 'gold');
+
+        $('#plateSection').innerHTML = plateSectionHTML();
+        bindPlateSection();
+    }
+    return;
+  }
+
+  if(act === 'sellplateid'){
+    const idx = state.plates.findIndex(p => p.id === +id);
+    if (idx < 0) return;
+    const plate = state.plates[idx];
+    if (plate.fromTrophy) return;
+    state.money += plate.price;
+    state.plates.splice(idx, 1);
+    updateWallet();
+    save();
+    toast('Номер продан за ' + fmt(plate.price), 'gold');
+    refreshPlatesList();
+    return;
+  }
+
+  if(act === 'delplateid'){
+    const idx = state.plates.findIndex(p => p.id === +id);
+    if (idx < 0) return;
+    confirmDialog('Удаление номера', 'Вы уверены, что хотите навсегда удалить этот номер? Деньги за него вы не получите.', () => {
+        state.plates.splice(idx, 1);
+        save();
+        toast('Номер удалён');
+        refreshPlatesList();
+    });
+    return;
+  }
+
+  if(act === 'reset'){
+    confirmDialog('Сброс прогресса',
+      'Вы уверены? Всё будет удалено: гараж, номера, деньги, улучшения.<br><br>Трофеи и картинки останутся.',
+      () => {
+        const savedTrophies = state.trophies.slice();
+        const savedImages = Object.assign({}, state.carImages);
+
+        state.money = START_MONEY;
+        state.garage = [];
+        state.plates = [];
+        state.upgrades = {discount:0, dealer:0, plate:0};
+        state.pityE = 0; state.pityL = 0; state.pityM = 0;
+        state.rebirths = 0;
+        state.trophies = savedTrophies;
+        state.carImages = savedImages;
+        state.nextId = 1;
+        state.plateId = 1;
+
+        pendingCars = [];
+        pendingPlate = null;
+        $('#resContent').style.display = 'none';
+        $('#resGlobalActions').style.display = 'none';
+        $('#resEmpty').style.display = 'flex';
+        
+        $('#plateSection').innerHTML = plateSectionHTML();
+        bindPlateSection();
+        
+        updateWallet();
+        updatePityUI();
+        renderSpinMulti();
+        refreshPlatesList();
+        save();
+        toast('Прогресс сброшен');
+        renderTab('menu');
+      });
+    return;
+  }
+
+  if(act === 'rebirth'){
+    if (state.rebirths >= 5) return;
+    const cost = REBIRTH_COSTS[state.rebirths];
+    if (state.money < cost) { toast('Недостаточно денег', 'err'); return; }
+
+    confirmDialog('Перерождение',
+      `Вы уверены? Всё будет сброшено (кроме трофеев и картинок).<br><br>Вы получите ${fmt(REBIRTH_START_MONEY[state.rebirths + 1])} и уровень ${state.rebirths + 1}.`,
+      () => {
+        const savedTrophies = state.trophies.slice();
+        const savedImages = Object.assign({}, state.carImages);
+
+        state.rebirths += 1;
+        state.money = REBIRTH_START_MONEY[state.rebirths];
+        state.garage = [];
+        state.plates = [];
+        state.upgrades = {discount:0, dealer:0, plate:0};
+        state.pityE = 0; state.pityL = 0; state.pityM = 0;
+        state.trophies = savedTrophies;
+        state.carImages = savedImages;
+
+        pendingCars = [];
+        pendingPlate = null;
+        $('#resContent').style.display = 'none';
+        $('#resGlobalActions').style.display = 'none';
+        $('#resEmpty').style.display = 'flex';
+        
+        $('#plateSection').innerHTML = plateSectionHTML();
+        bindPlateSection();
+
+        updateWallet();
+        updatePityUI();
+        renderSpinMulti();
+        refreshPlatesList();
+        save();
+        toast('Перерождение! Уровень ' + state.rebirths);
+        renderTab('upg');
+      });
+    return;
+  }
+
+  if(act === 'exportimages'){
+    const code = 'const DEFAULT_CAR_IMAGES = ' + JSON.stringify(state.carImages, null, 2) + ';';
+    openModal('Экспорт картинок',
+      `<p style="margin-bottom:12px;color:var(--mut);font-size:12px;line-height:1.5">
+        Скопируй код ниже и замени им блок<br>
+        <code style="background:var(--panel2);padding:2px 6px;border-radius:4px">const DEFAULT_CAR_IMAGES = {...};</code><br>
+        в файле игры.
+      </p>
+      <textarea readonly id="exportArea" style="width:100%;height:350px;background:var(--panel2);color:var(--text);border:1px solid var(--line2);border-radius:8px;padding:10px;font-family:monospace;font-size:11px;resize:vertical">${code.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>`,
+      `<button class="btn btn-go" id="copyExportBtn">📋 Скопировать</button>
+       <button class="btn" data-act="close">Закрыть</button>`);
+
+    setTimeout(() => {
+      const copyBtn = document.getElementById('copyExportBtn');
+      if (copyBtn) {
+        copyBtn.onclick = () => {
+          navigator.clipboard.writeText(code).then(() => {
+            toast('Код скопирован в буфер обмена', 'gold');
+          }).catch(() => {
+            const ta = document.getElementById('exportArea');
+            if (ta) { ta.select(); document.execCommand('copy'); toast('Скопировано'); }
+          });
+        };
+      }
+    }, 0);
+    return;
+  }
+
+  if(act === 'delimg'){
+    const key = el.dataset.key;
+    if (key) {
+      delete state.carImages[key];
+      save();
+      renderTab('images');
+    }
+    return;
+  }
+}
+
+$('#modalX').addEventListener('click', closeModal);
+$('#modal').addEventListener('click', e => { if(e.target.id === 'modal') closeModal(); });
+
+
+document.querySelectorAll('.main-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.main-tab').forEach(b => b.classList.remove('on'));
+        btn.classList.add('on');
+        const target = btn.dataset.target;
+        if (target === 'cars') {
+            $('#carSection').style.display = 'block';
+            $('#plateSection').style.display = 'none';
+        } else {
+            $('#carSection').style.display = 'none';
+            $('#plateSection').style.display = 'block';
+        }
+    });
+});
+
+$('#spinBtn').addEventListener('click', doSpin);
+
+$('#homeBtn').addEventListener('click', () => {
+    renderTab(curTab);
+    $('#drawer').classList.add('on');
+    $('#ovl').classList.add('on');
+});
+
+$('#drawerX').addEventListener('click', () => {
+    $('#drawer').classList.remove('on');
+    $('#ovl').classList.remove('on');
+});
+
+$('#ovl').addEventListener('click', () => {
+    $('#drawer').classList.remove('on');
+    $('#ovl').classList.remove('on');
+});
+
+document.querySelectorAll('.dtab').forEach(btn => {
+    btn.addEventListener('click', () => renderTab(btn.dataset.tab));
+});
+
+document.addEventListener('click', handleAction);
+
+function sellPendingCar(idx) {
+    const car = pendingCars[idx];
+    if (!car) return;
+    const amount = sellPrice(car.price);
+    state.money += amount;
+    updateWallet();
+    toast('Продано за ' + fmt(amount), 'gold');
+    pendingCars[idx] = null;
+    const card = document.getElementById('resCard_' + idx);
+    if (card) {
+        card.style.opacity = '0.3';
+        card.style.pointerEvents = 'none';
+        card.querySelector('button.btn-go').textContent = 'Продано';
+        card.querySelector('button.btn-go').className = 'btn';
+    }
+    save();
+    checkAndClearResult();
+}
+function keepPendingCar(idx) {
+    const car = pendingCars[idx];
+    if (!car) return;
+    state.garage.push({
+      id: state.nextId++,
+      brand: car.brand,
+      model: car.model,
+      price: car.price,
+      body: car.body,
+      color: car.color,
+      img: car.img,
+      r: car.r,
+      isMilitary: car.isMilitary,
+      plate: null,
+      fromTrophy: false
+    });
+    pendingCars[idx] = null;
+    const card = document.getElementById('resCard_' + idx);
+    if (card) {
+        card.style.opacity = '0.3';
+        card.style.pointerEvents = 'none';
+        card.querySelector('button.btn-gold').textContent = 'В гараже';
+        card.querySelector('button.btn-gold').className = 'btn';
+    }
+    toast('Машина отложена в гараж');
+    save();
+    refreshGarageList();
+    checkAndClearResult();
+}
+function sellAllPending() {
+    if (!pendingCars.length) return;
+    let total = 0, count = 0;
+    pendingCars.forEach(car => {
+      if (car) { total += sellPrice(car.price); count++; }
+    });
+    if (count > 0) {
+      state.money += total;
+      updateWallet();
+      toast(`Продано ${count} авто за ${fmt(total)}`, 'gold');
+    } else {
+      toast('Все машины уже проданы', 'err');
+    }
+    pendingCars = [];
+    $('#resContent').style.display = 'none';
+    $('#resGlobalActions').style.display = 'none';
+    $('#resEmpty').style.display = 'flex';
+    save();
+}
+function keepAllPending() {
+    if (!pendingCars.length) return;
+    let added = 0;
+    pendingCars.forEach(car => {
+      if (car) {
+        state.garage.push({
+          id: state.nextId++,
+          brand: car.brand,
+          model: car.model,
+          price: car.price,
+          body: car.body,
+          color: car.color,
+          img: car.img,
+          r: car.r,
+          isMilitary: car.isMilitary,
+          plate: null,
+          fromTrophy: false
+        });
+        added++;
+      }
+    });
+    if (added > 0) {
+      toast(`В гараж отложено: ${added}`);
+    } else {
+      toast('Нечего откладывать', 'err');
+    }
+    pendingCars = [];
+    $('#resContent').style.display = 'none';
+    $('#resGlobalActions').style.display = 'none';
+    $('#resEmpty').style.display = 'flex';
+    save();
+    refreshGarageList();
+}
+
+// === СИСТЕМА АККАУНТОВ ===
+
+// 1. Открыть окно смены никнейма
+window.promptNickname = function() {
+  openModal('Ваш никнейм',
+    `<div style="text-align:center; padding: 10px 0;">
+        <p style="margin-bottom: 15px; font-size: 13px; color: var(--mut);">От 3 до 24 символов (буквы, цифры, _)</p>
+        <input type="text" id="nickInput" value="${state.playerName || ''}" maxlength="24" 
+               style="width:100%; padding:12px; border-radius:8px; background:var(--bg); border:1px solid var(--line2); color:var(--text); font-size:16px; text-align:center; font-family:'Russo One';">
+        <div id="nickError" style="color:#ff6b6b; font-size:12px; margin-top:8px; display:none;"></div>
+    </div>`,
+    `<button class="btn btn-go" onclick="saveNickname()">Сохранить</button>`
+  );
+};
+
+// 2. Сохранить никнейм
+window.saveNickname = async function() {
+  const input = document.getElementById('nickInput').value.trim();
+  const errorEl = document.getElementById('nickError');
+  
+  // Валидация (3-24 символа, только буквы/цифры/нижнее подчеркивание)
+  const regex = /^[a-zA-Zа-яА-Я0-9_]{3,24}$/;
+  
+  if (!regex.test(input)) {
+    errorEl.textContent = 'Неверный формат. Используйте от 3 до 24 букв, цифр или _';
+    errorEl.style.display = 'block';
+    return;
+  }
+  
+  state.playerName = input;
+  await window.save(); // Сохраняем в Firebase
+  closeModal();
+  renderTab('menu');
+  toast('Никнейм успешно изменен!', 'gold');
+};
+
+// 3. Выход из аккаунта
+window.logoutUser = function() {
+  confirmDialog('Выход', 'Вы уверены, что хотите выйти? Игра перезагрузится.', async () => {
+    try {
+      // Вызываем функцию выхода, которую мы пропишем в Firebase скрипте
+      if (window.firebaseSignOut) {
+        await window.firebaseSignOut(window.firebaseAuth);
+        window.location.reload(); // Перезагружаем страницу, чтобы сбросить состояние
+      }
+    } catch (e) {
+      toast('Ошибка выхода', 'err');
+    }
+  });
+};
+</script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, signInAnonymously, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, linkWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBksufYvk30uFFmyoDNUuDUrjgTf1HPga8",
+    authDomain: "garage777-15232.firebaseapp.com",
+    projectId: "garage777-15232",
+    storageBucket: "garage777-15232.firebasestorage.app",
+    messagingSenderId: "284399741604",
+    appId: "1:284399741604:web:4ec9f675421345191f5431"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // Экспортируем нужные функции для основного скрипта
+  window.firebaseDB = db;
+  window.firebaseAuth = auth;
+  window.firebaseSignOut = signOut;
+  window.firestoreDoc = doc;
+  window.firestoreGetDoc = getDoc;
+  window.firestoreSetDoc = setDoc;
+  window.firebaseUser = null;
+  window.isWaitingForAuth = false;
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      window.firebaseUser = user;
+      console.log("Успешный вход! UID:", user.uid);
+      
+      if (user.isAnonymous) {
+        const shortId = user.uid.substring(0, 5).toUpperCase();
+        window.guestDisplayId = "Guest-" + shortId;
+      } else {
+        window.guestDisplayId = user.displayName;
+      }
+      
+      const authScreen = document.getElementById('authScreen');
+      if (authScreen) {
+        authScreen.style.opacity = '0';
+        setTimeout(() => authScreen.style.display = 'none', 500);
+      }
+
+      await window.load(); 
+      
+    } else {
+      console.log("Ожидание выбора аккаунта...");
+      const authScreen = document.getElementById('authScreen');
+      if (authScreen) {
+          authScreen.style.display = 'flex';
+          setTimeout(() => authScreen.style.opacity = '1', 50);
+      }
+    }
+  });
+
+  window.playAsGuest = () => {
+    if (window.isWaitingForAuth) return;
+    window.isWaitingForAuth = true;
+    signInAnonymously(auth).catch(e => { window.isWaitingForAuth = false; });
+  };
+
+  window.loginWithGoogle = async () => {
+    if (window.isWaitingForAuth) return;
+    window.isWaitingForAuth = true;
+    const provider = new GoogleAuthProvider();
+    try {
+        await signInWithPopup(auth, provider);
+        window.isWaitingForAuth = false;
+    } catch (error) {
+        window.isWaitingForAuth = false;
+    }
+  };
+
+  // НОВАЯ ФУНКЦИЯ: Привязка текущего гостя к Google
+  window.linkGoogleAccount = async () => {
+    if (!auth.currentUser || !auth.currentUser.isAnonymous) return;
+    
+    const provider = new GoogleAuthProvider();
+    try {
+        const result = await linkWithPopup(auth.currentUser, provider);
+        toast("Аккаунт привязан к Google!", "gold");
+        
+        // После привязки Firebase обновляет профиль, нужно перерисовать меню
+        renderTab('menu');
+        
+        // Сразу просим установить никнейм (если он еще не установлен)
+        if (!state.playerName) {
+            setTimeout(() => promptNickname(), 500);
+        }
+        
+    } catch (error) {
+        console.error("Ошибка привязки:", error);
+        if (error.code === 'auth/credential-already-in-use') {
+            toast('Этот Google-аккаунт уже привязан к другой игре!', 'err');
+        } else if (error.code === 'auth/popup-closed-by-user') {
+            // Игрок закрыл окно, ничего не делаем
+        } else {
+            toast('Ошибка привязки: ' + error.message, 'err');
+        }
+    }
+  };
+</script>
+
+</body>
+</html>
