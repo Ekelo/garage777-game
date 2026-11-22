@@ -278,7 +278,7 @@ main{max-width:1100px;margin:0 auto;padding:96px 16px 60px}
 .plate-controls select, .plate-controls button { padding: 12px; border-radius: 10px; background: var(--panel2); border: 1px solid var(--line2); color: var(--text); font-weight: 800; font-family: inherit; flex: 1; outline: none; cursor: pointer; transition: 0.2s;}
 .plate-controls select:hover, .plate-controls button:hover { border-color: #48597a; }
 .plate-controls button.btn-go { background: var(--go); color: #07271a; border-color: var(--go); }
-.plate-result-box { min-height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); border-radius: 14px; padding: 20px; border: 1px dashed var(--line2); }
+.plate-result-box { height: 360px; min-height: 360px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); border-radius: 14px; padding: 20px; border: 1px dashed var(--line2); overflow: hidden; box-sizing: border-box; transition: 0.3s; }
 .plate-result-box.has-result { border-style: solid; border-color: var(--line); background: var(--panel2); }
 
 .sel-row{display:flex;gap:8px;margin-bottom:12px; flex-wrap: wrap;}
