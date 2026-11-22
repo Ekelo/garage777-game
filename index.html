@@ -144,7 +144,10 @@
 </div></div>
 
 <div id="toasts"></div>
-
+<script src="images1.js" defer></script>
+<script src="images2.js" defer></script>
+<script src="images3.js" defer></script>
+<script src="images4.js" defer></script>
 <script>
   'use strict';
   if (typeof window.DEFAULT_CAR_IMAGES === 'undefined') window.DEFAULT_CAR_IMAGES = {};
@@ -154,21 +157,6 @@ const START_MONEY = 500000;
 const SPIN_COST   = 350000;
 const PLATE_COST  = 25000;
 const SELL_RATE   = 0.5;
-
-// Асинхронная загрузка картинок в фоне
-fetch('images.js')
-  .then(response => response.text())
-  .then(text => {
-      const script = document.createElement('script');
-      script.text = text;
-      document.body.appendChild(script);
-      console.log('Картинки загружены!');
-      // Если игра уже запущена, перерисовываем текущую вкладку
-      if (typeof renderTab === 'function' && typeof curTab !== 'undefined') {
-          renderTab(curTab);
-      }
-  })
-  .catch(err => console.error('Ошибка загрузки картинок:', err));
 
 const REBIRTH_COSTS = [5000000, 70000000, 500000000, 2000000000, 10000000000];
 const REBIRTH_START_MONEY = [500000, 700000, 1000000, 1500000, 1500000, 1500000];
