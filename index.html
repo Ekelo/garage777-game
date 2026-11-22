@@ -3519,6 +3519,14 @@ window.sellAllPlatesFromLimit = function() {
     toast('Номера проданы за ' + fmt(total), 'gold');
     closeModal();
 };
+
+  window.goToTab = function(tab) {
+    closeModal();
+    document.getElementById('drawer').classList.add('on');
+    document.getElementById('ovl').classList.add('on');
+    renderTab(tab);
+};
+
 </script>
 
 <script type="module">
@@ -3626,12 +3634,7 @@ window.sellAllPlatesFromLimit = function() {
     }
   };
 
-  window.goToTab = function(tab) {
-    closeModal();
-    document.getElementById('drawer').classList.add('on');
-    document.getElementById('ovl').classList.add('on');
-    renderTab(tab);
-};
+
 
 </script>
 
