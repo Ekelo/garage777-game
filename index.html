@@ -1461,6 +1461,7 @@ async function loadDB() {
 
 // --- НОВЫЕ ФУНКЦИИ СОХРАНЕНИЯ ЧЕРЕЗ FIREBASE ---
 
+
 // Функция сохранения
 window.save = async function() {
   if (!window.firebaseUser) {
@@ -1470,11 +1471,19 @@ window.save = async function() {
   
   try {
     const userDocRef = window.firestoreDoc(window.firebaseDB, "users", window.firebaseUser.uid);
-    await window.firestoreSetDoc(userDocRef, state, { merge: true });
+    
+    // 1. Делаем копию state, чтобы случайно не удалить картинки из самой игры
+    const stateToSave = { ...state };
+    
+    // 2. Удаляем тяжелые картинки из объекта, который улетает в базу
+    delete stateToSave.carImages; 
+    
+    // 3. Сохраняем облегченную версию
+    await window.firestoreSetDoc(userDocRef, stateToSave, { merge: true });
     console.log("💾 Игра сохранена в облако!");
   } catch (e) {
     console.error("Ошибка сохранения в Firebase:", e);
-    // Если облако недоступно (например, нет интернета), сохраняем локально
+    // Если облако недоступно, сохраняем локально
     saveDB(state).catch(err => console.error("Локальное сохранение тоже упало:", err));
   }
 };
