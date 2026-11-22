@@ -469,7 +469,7 @@ const PLATE_COST  = 25000;
 const SELL_RATE   = 0.5;
 
 const REBIRTH_COSTS = [5000000, 70000000, 500000000, 2000000000, 10000000000];
-const REBIRTH_START_MONEY = [100000, 200000, 500000, 1000000, 2000000, 5000000];
+const REBIRTH_START_MONEY = [500000, 700000, 1000000, 1500000, 1500000, 1500000];
 
 const $ = s => document.querySelector(s);
 const rnd = n => Math.floor(Math.random() * n);
@@ -1280,7 +1280,7 @@ function generatePlate(countryCode, regionIdx, plateType, attempt = 0) {
             digits = String(rnd(999) + 1).padStart(3, '0');
             // Правильный формат: Буква + 3 цифры + 2 буквы (например: А 583 АА)
             plateObj.main = f.s[0] + digits + f.s[1] + f.s[2]; 
-            plateObj.reg = pick(f.regs);
+            plateObj.reg = regionCode;
             plateObj.famous = true;
             plateObj.desc = f.desc;
             plateObj.k = f.k;
@@ -1372,7 +1372,7 @@ function generatePlate(countryCode, regionIdx, plateType, attempt = 0) {
                         mainStr = '555 ' + digits.slice(0, 2) + ' ' + f.s; // Формат: 555 00 КА
                     }
                     plateObj.main = mainStr;
-                    plateObj.reg = pick(f.regs);
+                    plateObj.reg = regionCode;
                     plateObj.famous = true;
                     plateObj.desc = f.desc;
                     plateObj.k = f.k;
@@ -1392,7 +1392,7 @@ function generatePlate(countryCode, regionIdx, plateType, attempt = 0) {
                     const suffix = Math.random() < 0.6 ? f.s : pick(famousEndings);
                     mainStr = f.s + ' ' + digits + ' ' + suffix;
                     plateObj.main = mainStr;
-                    plateObj.reg = pick(f.regs);
+                    plateObj.reg = regionCode;
                     plateObj.famous = true;
                     plateObj.desc = f.desc;
                     plateObj.k = f.k;
@@ -1835,6 +1835,13 @@ function renderResultCard(car, index) {
 async function doSpin(){
   if(spinning) return;
 
+    if (state.garage.length >= getGarageCap()) {
+      openModal('Гараж переполнен', `<div style="text-align:center; padding:20px; font-size:14px; line-height:1.5;">Достигнут лимит машин (${getGarageCap()}).<br>Чтобы продолжить, освободите место.</div>`,
+      `<button class="btn btn-go" onclick="closeModal(); document.getElementById('homeBtn').click(); document.querySelector('.dtab[data-tab=\\'garage\\']').click();">Перейти в гараж</button>
+       <button class="btn btn-red" onclick="sellAllGarageFromLimit()">Продать всё</button>`);
+      return;
+  }
+
   const cost = spinCost() * selSpinCount;
 
   if(state.money < cost){ toast('Недостаточно денег для прокрутки', 'err'); return; }
@@ -2016,6 +2023,13 @@ function refreshPlatesList() {
 
 async function doSpinPlate(){
   if(plateSpinning) return;
+
+    if (state.plates.length >= getPlateCap()) {
+      openModal('Хранилище переполнено', `<div style="text-align:center; padding:20px; font-size:14px; line-height:1.5;">Достигнут лимит номеров (${getPlateCap()}).<br>Чтобы продолжить, освободите место.</div>`,
+      `<button class="btn btn-go" onclick="closeModal(); document.getElementById('homeBtn').click(); document.querySelector('.dtab[data-tab=\\'platesInv\\']').click();">Перейти в номера</button>
+       <button class="btn btn-red" onclick="sellAllPlatesFromLimit()">Продать всё</button>`);
+      return;
+  }
 
     if (selPlateType === 'commercial' && !state.unlockedTypes.commercial) {
       confirmDialog('Покупка', 'Открыть коммерческие номера за 100 000 ₽?', () => {
@@ -2306,7 +2320,10 @@ function getPlatesListHTML() {
     
     return `<div class="plItem">
       <div class="plItem-header">
-        ${plateHTML(p, 'sm')}
+        <div style="display:flex; flex-direction:column; gap:4px; align-items:flex-start;">
+          ${plateHTML(p, 'sm')}
+          <span style="font-size:10px; color:var(--mut); font-weight:800; text-transform:uppercase; letter-spacing:0.5px;">${p.regionName || 'Регион ' + p.reg}</span>
+        </div>
         <span class="prc">${fmt(p.price)}</span>
       </div>
       <div style="display:flex; gap:6px; align-items:center; margin-top:6px; flex-wrap:wrap;">
@@ -3477,6 +3494,30 @@ window.logoutUser = function() {
       toast('Ошибка выхода', 'err');
     }
   });
+};
+
+window.sellAllGarageFromLimit = function() {
+    let total = 0;
+    const carsToSell = state.garage.filter(c => !c.fromTrophy);
+    carsToSell.forEach(c => {
+      if (c.plate) { c.plate.carId = null; state.plates.push(c.plate); }
+      total += sellPrice(c.price);
+    });
+    state.money += total;
+    state.garage = state.garage.filter(c => c.fromTrophy);
+    updateWallet(); save(); refreshGarageList();
+    toast('Гараж продан за ' + fmt(total), 'gold');
+    closeModal();
+};
+window.sellAllPlatesFromLimit = function() {
+    let total = 0;
+    const normalPlates = state.plates.filter(p => !p.fromTrophy);
+    normalPlates.forEach(p => total += p.price);
+    state.money += total;
+    state.plates = state.plates.filter(p => p.fromTrophy);
+    updateWallet(); save(); refreshPlatesList();
+    toast('Номера проданы за ' + fmt(total), 'gold');
+    closeModal();
 };
 </script>
 
