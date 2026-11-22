@@ -1835,9 +1835,9 @@ function renderResultCard(car, index) {
 async function doSpin(){
   if(spinning) return;
 
-    if (state.garage.length >= getGarageCap()) {
+  if (state.garage.length >= getGarageCap()) {
       openModal('Гараж переполнен', `<div style="text-align:center; padding:20px; font-size:14px; line-height:1.5;">Достигнут лимит машин (${getGarageCap()}).<br>Чтобы продолжить, освободите место.</div>`,
-      `<button class="btn btn-go" onclick="closeModal(); document.getElementById('homeBtn').click(); document.querySelector('.dtab[data-tab=\\'garage\\']').click();">Перейти в гараж</button>
+      `<button class="btn btn-go" onclick="goToTab('garage')">Перейти в гараж</button>
        <button class="btn btn-red" onclick="sellAllGarageFromLimit()">Продать всё</button>`);
       return;
   }
@@ -2024,9 +2024,9 @@ function refreshPlatesList() {
 async function doSpinPlate(){
   if(plateSpinning) return;
 
-    if (state.plates.length >= getPlateCap()) {
+  if (state.plates.length >= getPlateCap()) {
       openModal('Хранилище переполнено', `<div style="text-align:center; padding:20px; font-size:14px; line-height:1.5;">Достигнут лимит номеров (${getPlateCap()}).<br>Чтобы продолжить, освободите место.</div>`,
-      `<button class="btn btn-go" onclick="closeModal(); document.getElementById('homeBtn').click(); document.querySelector('.dtab[data-tab=\\'platesInv\\']').click();">Перейти в номера</button>
+      `<button class="btn btn-go" onclick="goToTab('platesInv')">Перейти в номера</button>
        <button class="btn btn-red" onclick="sellAllPlatesFromLimit()">Продать всё</button>`);
       return;
   }
@@ -3625,6 +3625,14 @@ window.sellAllPlatesFromLimit = function() {
         }
     }
   };
+
+  window.goToTab = function(tab) {
+    closeModal();
+    document.getElementById('drawer').classList.add('on');
+    document.getElementById('ovl').classList.add('on');
+    renderTab(tab);
+};
+
 </script>
 
 </body>
