@@ -33,6 +33,9 @@
 <div id="hud">
   <div id="wallet"><div><div class="lbl">Баланс</div><div class="val" id="money">0 ₽</div></div></div>
   <div class="corner">
+    <button class="iconbtn" id="marketBtn" title="Онлайн Рынок">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+    </button>
     <button class="iconbtn" id="homeBtn" title="Меню">
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
         stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 9v11h5v-6h4v6h5V9"/></svg>
@@ -128,9 +131,6 @@
     <button class="dtab" data-tab="upg">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10M6 20v-6M18 20V4"/></svg>
       Улучшения</button>
-    <button class="dtab" data-tab="images">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-      Фото</button>
   </nav>
   <div id="dBody"></div>
 </aside>
@@ -144,6 +144,26 @@
 </div></div>
 
 <div id="toasts"></div>
+
+<!-- ЭКРАН РЫНКА -->
+<div id="marketScreen" style="display: none; position: fixed; inset: 0; background: var(--bg); z-index: 40; padding: 96px 16px 60px; overflow-y: auto; flex-direction: column;">
+   <div style="max-width: 1100px; margin: 0 auto; width: 100%;">
+      <div class="sect-title">
+        <h3>Онлайн Рынок</h3>
+        <span class="cnt" id="marketCount">0 лотов</span>
+      </div>
+      
+      <!-- Вкладки рынка -->
+      <div class="main-tabs" style="margin-bottom: 20px; display: flex; gap: 10px; justify-content: flex-start; flex-wrap: wrap;">
+        <button class="main-tab on" onclick="switchMarketTab('cars')" id="mTabCars">Купить Авто</button>
+        <button class="main-tab" onclick="switchMarketTab('plates')" id="mTabPlates">Купить Номера</button>
+        <button class="main-tab" onclick="switchMarketTab('sell')" id="mTabSell">Выставить на продажу</button>
+      </div>
+
+      <!-- Контейнер для списка -->
+      <div id="marketListContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;"></div>
+   </div>
+</div>
 
 <script src="images_compressed.js" defer></script>
 <script>
@@ -513,6 +533,350 @@ const CAR_PATHS = {
   truck:  'M6,62 L8,34 Q10,28 19,27 L52,26 L52,16 Q52,12 60,12 L92,12 Q98,12 98,18 L98,62 L6,62 Z M104,26 L150,26 Q154,26 154,32 L154,60 Q154,66 146,66 L104,66 Z',
   van:    'M10,60 L12,30 Q14,22 25,22 L110,22 Q118,22 122,30 L135,42 L146,44 Q154,46 154,54 L154,60 Q154,66 148,66 L18,66 Q10,66 10,60 Z',
   minivan:'M10,60 L12,40 Q14,32 25,32 L110,32 Q118,32 122,40 L135,48 L146,50 Q154,52 154,58 L154,60 Q154,66 148,66 L18,66 Q10,66 10,60 Z'
+};
+
+let marketItems = [];
+let marketUnsubscribe = null;
+let isMarketOpen = false;
+let currentMarketTab = 'cars';
+
+const originalMarketIcon = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>`;
+const backIcon = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>`;
+
+window.toggleMarket = function() {
+    if (!window.firebaseUser) { toast('Войдите в аккаунт для доступа к рынку', 'err'); return; }
+    isMarketOpen = !isMarketOpen;
+    const screen = document.getElementById('marketScreen');
+    const btn = document.getElementById('marketBtn');
+
+    if (isMarketOpen) {
+        screen.style.display = 'flex';
+        btn.innerHTML = backIcon;
+        switchMarketTab('cars');
+    } else {
+        screen.style.display = 'none';
+        btn.innerHTML = originalMarketIcon;
+    }
+};
+
+window.switchMarketTab = function(tab) {
+    currentMarketTab = tab;
+    document.getElementById('mTabCars').classList.toggle('on', tab === 'cars');
+    document.getElementById('mTabPlates').classList.toggle('on', tab === 'plates');
+    document.getElementById('mTabSell').classList.toggle('on', tab === 'sell');
+    renderMarket();
+};
+
+window.startMarketListener = function() {
+    if (marketUnsubscribe) return;
+    const q = window.firestoreQuery(window.firestoreCollection(window.firebaseDB, "market"), window.firestoreOrderBy("timestamp", "desc"));
+    marketUnsubscribe = window.firestoreOnSnapshot(q, (snapshot) => {
+        marketItems = [];
+        snapshot.forEach((doc) => {
+            marketItems.push({ id: doc.id, ...doc.data() });
+        });
+        if (isMarketOpen) renderMarket();
+    });
+};
+
+function renderMarket() {
+    const container = document.getElementById('marketListContainer');
+    const count = document.getElementById('marketCount');
+    if (!container) return;
+
+    if (currentMarketTab === 'sell') {
+        count.textContent = `Ваш инвентарь`;
+        container.innerHTML = getSellInventoryHTML();
+        return;
+    }
+
+    let filtered = marketItems.filter(i => i.type === (currentMarketTab === 'cars' ? 'car' : 'plate'));
+    count.textContent = `${filtered.length} лотов`;
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<div class="empty-box" style="grid-column: 1/-1; padding: 40px;">На рынке пока пусто.</div>';
+        return;
+    }
+
+    container.innerHTML = filtered.map(item => {
+        if (item.type === 'car') {
+            return `<div class="gcar" style="flex-direction:column; display:flex; border-left-color: var(--gold);">
+              <div class="art" style="height:120px; margin-bottom:10px;">${getCarVisual(item.item)}</div>
+              <div class="sub">${item.item.brand}</div>
+              <h4 style="margin:0 0 8px 0;">${item.item.model}</h4>
+              ${item.item.plate ? `<div style="margin-bottom:8px;">${plateHTML(item.item.plate, 'sm')}</div>` : '<div style="font-size:11px; color:var(--mut); margin-bottom:8px;">Без номера</div>'}
+              <div class="prc" style="color:var(--go); font-size:18px;">${fmt(item.price)}</div>
+              <div style="font-size:11px; color:var(--mut); margin:8px 0;">Продавец: <b>${item.sellerName}</b></div>
+              <div class="acts" style="flex-direction: column;">
+                 <button class="btn" style="background:var(--panel);" onclick="showCarDetails('${item.id}')">Подробнее</button>
+                 ${item.sellerId === window.firebaseUser.uid 
+                   ? `<button class="btn btn-red" onclick="cancelMarketLot('${item.id}')">Снять с продажи</button>`
+                   : `<button class="btn btn-go" onclick="buyMarketLot('${item.id}')">Приобрести</button>`
+                 }
+              </div>
+            </div>`;
+        } else {
+            return `<div class="gcar" style="flex-direction:column; display:flex; border-left-color: var(--gold);">
+              <div class="art" style="height:80px; margin-bottom:10px;">${plateHTML(item.item, 'lg')}</div>
+              <div class="desc" style="margin-bottom:8px; font-size:12px; color:var(--gold);">${item.item.desc || 'Номер'}</div>
+              <div class="prc" style="color:var(--go); font-size:18px;">${fmt(item.price)}</div>
+              <div style="font-size:11px; color:var(--mut); margin:8px 0;">Продавец: <b>${item.sellerName}</b></div>
+              <div class="acts" style="flex-direction: column;">
+                 ${item.sellerId === window.firebaseUser.uid 
+                   ? `<button class="btn btn-red" onclick="cancelMarketLot('${item.id}')">Снять с продажи</button>`
+                   : `<button class="btn btn-go" onclick="buyMarketLot('${item.id}')">Приобрести</button>`
+                 }
+              </div>
+            </div>`;
+        }
+    }).join('');
+}
+
+function getSellInventoryHTML() {
+    let html = '<div style="grid-column: 1/-1;"><h4 style="margin-bottom:10px; color:var(--gold);">Машины в гараже</h4><div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px;">';
+    if(state.garage.length === 0) html += '<div style="color:var(--mut); font-size:12px;">Пусто</div>';
+    state.garage.filter(c => !c.fromTrophy).forEach(c => {
+        html += `<div class="img-card">
+            <div class="img-thumb" style="height:60px;">${getCarVisual(c)}</div>
+            <div style="font-size:10px; font-weight:800;">${c.brand} ${c.model}</div>
+            <button class="btn btn-gold" style="padding:6px; font-size:11px;" onclick="sellToMarket('car', ${c.id})">Выставить</button>
+        </div>`;
+    });
+    html += '</div><h4 style="margin:20px 0 10px 0; color:var(--gold);">Номера</h4><div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px;">';
+    if(state.plates.length === 0) html += '<div style="color:var(--mut); font-size:12px;">Пусто</div>';
+      state.plates.filter(p => !p.fromTrophy).forEach(p => {
+        html += `<div class="img-card">
+            <div class="img-thumb" style="height:60px;">${plateHTML(p, 'sm')}</div>
+            <button class="btn btn-gold" style="padding:6px; font-size:11px;" onclick="sellToMarket('plate', ${p.id})">Выставить</button>
+        </div>`;
+    });
+    html += '</div></div>';
+    return html;
+}
+
+// Подробнее о машине
+window.showCarDetails = function(lotId) {
+    const lot = marketItems.find(i => i.id === lotId);
+    if (!lot) return;
+    
+    const owners = lot.item.ownerCount || 1;
+    const original = lot.item.originalOwner || 'Неизвестно';
+
+    openModal('Информация о лоте', `
+      <div style="text-align:center; padding:10px;">
+         <div style="margin-bottom:15px;">${getCarVisual(lot.item)}</div>
+         <h3 style="margin-bottom:5px;">${lot.item.brand} ${lot.item.model}</h3>
+         <p style="font-size:14px; margin-bottom:15px;">${fmt(lot.item.price)}</p>
+         <div style="background:var(--panel); padding:12px; border-radius:8px; font-size:12px; text-align:left; line-height:1.6;">
+            <b>Первый владелец:</b> ${original}<br>
+            <b>Текущий продавец:</b> ${lot.sellerName}<br>
+            <b>Смен владения:</b> ${owners}<br>
+            <b>Номер:</b> ${lot.item.plate ? `${lot.item.plate.main} (${lot.item.plate.reg} рег.)` : 'Нет'}
+         </div>
+      </div>`,
+      `<button class="btn btn-go" onclick="buyMarketLot('${lot.id}')">Приобрести</button>
+       <button class="btn" onclick="closeModal()">Закрыть</button>`
+    );
+};
+
+window.updateMarketPayout = function(commRate) {
+    const price = parseInt(document.getElementById('marketPriceInput').value) || 0;
+    const comm = Math.floor(price * commRate);
+    const payout = price - comm;
+    document.getElementById('marketCommAmount').textContent = `-${num(comm)} ₽`;
+    document.getElementById('marketPayoutAmount').textContent = `${num(payout)} ₽`;
+};
+
+window.sellToMarket = function(type, itemId) {
+    if (!window.firebaseUser) return toast('Нужен аккаунт!', 'err');
+    let item;
+    if (type === 'car') item = state.garage.find(c => c.id === itemId);
+    else item = state.plates.find(p => p.id === itemId);
+    
+    if (!item) return;
+
+    // ЗАЩИТА ОТ ТРОФЕЕВ
+    if (item.fromTrophy) {
+        return toast('Трофейные предметы нельзя выставлять на рынок!', 'err');
+    }
+
+    const commRate = type === 'car' ? 0.09 : 0.06;
+    const commPct = type === 'car' ? '9%' : '6%';
+    const defaultPrice = type === 'car' ? sellPrice(item.price) : item.price;
+
+    openModal('Выставить на рынок', 
+      `<div style="text-align:center; padding:10px;">
+         <p style="margin-bottom:15px; font-size:13px; color:var(--mut);">Укажите цену:</p>
+         <input type="number" id="marketPriceInput" value="${defaultPrice}" oninput="updateMarketPayout(${commRate})" style="width:100%; padding:12px; font-size:18px; text-align:center; border-radius:8px; background:var(--bg); border:1px solid var(--line2); color:var(--gold); font-family:'Russo One';">
+         
+         <div style="margin-top:15px; font-size:13px; text-align:left; background:var(--bg); padding:12px; border-radius:8px; border:1px solid var(--line);">
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+               <span style="color:var(--mut);">Комиссия рынка (${commPct}):</span>
+               <span id="marketCommAmount" style="color:#ff6b6b; font-weight:800;">-${num(defaultPrice * commRate)} ₽</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-weight:800; color:var(--go); font-size:15px;">
+               <span>Вы получите:</span>
+               <span id="marketPayoutAmount">${num(defaultPrice - (defaultPrice * commRate))} ₽</span>
+            </div>
+         </div>
+       </div>`,
+      `<button class="btn btn-go" onclick="confirmSellToMarket('${type}', ${itemId})">Выставить</button>
+       <button class="btn" onclick="closeModal()">Отмена</button>`
+    );
+};
+
+window.confirmSellToMarket = async function(type, itemId) {
+    const price = parseInt(document.getElementById('marketPriceInput').value);
+    if (!price || price <= 0) return toast('Неверная цена', 'err');
+
+    let item, sourceArray;
+    if (type === 'car') { sourceArray = state.garage; item = state.garage.find(c => c.id === itemId); }
+    else { sourceArray = state.plates; item = state.plates.find(p => p.id === itemId); }
+    if (!item) return;
+    if (item.fromTrophy) return toast('Трофейные предметы нельзя выставлять на рынок!', 'err');
+
+    // Записываем владельца, если его нет
+    item.originalOwner = item.originalOwner || state.playerName || window.guestDisplayId || 'Аноним';
+    item.ownerCount = item.ownerCount || 1;
+
+    const index = sourceArray.findIndex(i => i.id === itemId);
+    sourceArray.splice(index, 1);
+
+    try {
+        await window.firestoreAddDoc(window.firestoreCollection(window.firebaseDB, "market"), {
+            sellerId: window.firebaseUser.uid,
+            sellerName: state.playerName || window.guestDisplayId || 'Аноним',
+            type: type,
+            item: item,
+            price: price,
+            timestamp: Date.now()
+        });
+        
+        save();
+        closeModal();
+        toast('Лот выставлен на рынок!', 'gold');
+        renderMarket();
+    } catch (e) {
+        toast('Ошибка выставления', 'err');
+        console.error(e);
+    }
+};
+
+// Покупка лота (с комиссией)
+window.buyMarketLot = async function(lotId) {
+    const lot = marketItems.find(i => i.id === lotId);
+    if (!lot) return;
+    if (state.money < lot.price) return toast('Недостаточно денег!', 'err');
+    if (lot.type === 'car' && state.garage.length >= getGarageCap()) return toast('Гараж переполнен!', 'err');
+    if (lot.type === 'plate' && state.plates.length >= getPlateCap()) return toast('Хранилище переполнено!', 'err');
+
+    let confirmText = '';
+    if (lot.type === 'car') {
+        confirmText = `Вы совершаете покупку <b>${lot.item.brand} ${lot.item.model}</b>${lot.item.plate ? ` с номером <b>${lot.item.plate.main}</b> на <b>${lot.item.plate.reg}</b> регионе` : ''} у пользователя <b>${lot.sellerName}</b> за <b>${fmt(lot.price)}</b>.`;
+    } else {
+        confirmText = `Вы собираетесь приобрести регистрационный знак <b>${lot.item.main}</b> на <b>${lot.item.reg}</b> регионе у пользователя <b>${lot.sellerName}</b> за <b>${fmt(lot.price)}</b>.`;
+    }
+
+    openModal('Подтверждение покупки', `<div style="text-align:center; padding:20px; font-size:14px; line-height:1.6;">${confirmText}</div>`,
+      `<button class="btn btn-go" onclick="executeBuy('${lotId}')">Совершить покупку</button>
+       <button class="btn" onclick="closeModal()">Отменить</button>`
+    );
+};
+
+window.executeBuy = async function(lotId) {
+    closeModal();
+    const lot = marketItems.find(i => i.id === lotId);
+    if (!lot) return;
+
+    try {
+        const buyerRef = window.firestoreDoc(window.firebaseDB, "users", window.firebaseUser.uid);
+        const sellerRef = window.firestoreDoc(window.firebaseDB, "users", lot.sellerId);
+        const lotRef = window.firestoreDoc(window.firebaseDB, "market", lotId);
+
+        // Аккаунты для комиссии
+        const adminEmails = ['kystic81_gmail_com', 'artemrussiaabdullin_mail_ru', 'maksim186ruuss_gmail_com'];
+        const adminRefs = adminEmails.map(email => window.firestoreDoc(window.firebaseDB, "admins", email));
+
+        await window.firestoreRunTransaction(window.firebaseDB, async (transaction) => {
+            const lotDoc = await transaction.get(lotRef);
+            if (!lotDoc.exists()) throw "Лот уже продан!";
+            
+            const buyerDoc = await transaction.get(buyerRef);
+            const sellerDoc = await transaction.get(sellerRef);
+            
+            // Читаем админов ДО любых изменений
+            const adminDocs = [];
+            for (let ref of adminRefs) {
+                adminDocs.push(await transaction.get(ref));
+            }
+
+            if (!buyerDoc.exists()) throw "Ошибка покупателя";
+            const buyerData = buyerDoc.data();
+            if (buyerData.money < lot.price) throw "Недостаточно средств!";
+
+            // 1. Списание у покупателя
+            let newGarage = buyerData.garage || [];
+            let newPlates = buyerData.plates || [];
+            lot.item.ownerCount = (lot.item.ownerCount || 1) + 1; // Увеличиваем счетчик владельцев
+            if (lot.type === 'car') newGarage.push(lot.item);
+            else newPlates.push(lot.item);
+
+            transaction.update(buyerRef, { money: buyerData.money - lot.price, garage: newGarage, plates: newPlates });
+
+            // 2. Расчет комиссии
+            // Машины: 9% (по 3% на 3 аккаунта). Номера: 15% (по 5% на 3 аккаунта)
+            const adminShare = lot.type === 'car' ? Math.floor(lot.price * 0.03) : Math.floor(lot.price * 0.02);
+            const totalTax = adminShare * 3;
+            const sellerGet = lot.price - totalTax;
+
+            // 3. Начисление продавцу
+            if (sellerDoc.exists()) {
+                transaction.update(sellerRef, { money: (sellerDoc.data().money || 0) + sellerGet });
+            }
+
+            // 4. Начисление комиссии админам
+            adminRefs.forEach((ref, index) => {
+                if (adminDocs[index].exists()) {
+                    transaction.update(ref, { balance: (adminDocs[index].data().balance || 0) + adminShare });
+                } else {
+                    transaction.set(ref, { balance: adminShare });
+                }
+            });
+
+            transaction.delete(lotRef);
+        });
+
+        toast('Успешная покупка!', 'gold');
+        
+        // Обновляем локальное состояние
+        state.money -= lot.price;
+        if (lot.type === 'car') state.garage.push(lot.item);
+        if (lot.type === 'plate') state.plates.push(lot.item);
+        updateWallet();
+        
+    } catch (e) {
+        console.error("Transaction failed: ", e);
+        toast(typeof e === 'string' ? e : 'Ошибка транзакции', 'err');
+    }
+};
+
+window.cancelMarketLot = async function(lotId) {
+    const lot = marketItems.find(i => i.id === lotId);
+    if (!lot) return;
+    if (lot.type === 'car' && state.garage.length >= getGarageCap()) return toast('Гараж переполнен!', 'err');
+    if (lot.type === 'plate' && state.plates.length >= getPlateCap()) return toast('Хранилище переполнено!', 'err');
+
+    confirmDialog('Отмена', 'Снять лот с продажи и вернуть себе?', async () => {
+        try {
+            await window.firestoreDeleteDoc(window.firestoreDoc(window.firebaseDB, "market", lotId));
+            if (lot.type === 'car') state.garage.push(lot.item);
+            if (lot.type === 'plate') state.plates.push(lot.item);
+            save();
+            toast('Лот снят с продажи');
+        } catch (e) {
+            toast('Ошибка отмены', 'err');
+        }
+    });
 };
 
 function carSVG(body, color){
@@ -1886,6 +2250,10 @@ function getGarageListHTML(){
         ? `<button class="btn btn-red" data-act="deletecar" data-id="${c.id}">Удалить</button>`
         : `<button class="btn btn-red" data-act="sellcar" data-id="${c.id}">Продать</button>`;
 
+    // Кнопка "На рынок" скрыта для трофеев, а "В трофеи" видна всегда
+    const marketBtn = !c.fromTrophy ? `<button class="btn btn-gold" onclick="sellToMarket('car', ${c.id})">На рынок</button>` : '';
+    const trophyBtn = `<button class="btn btn-gold" data-act="totrophy" data-id="${c.id}">В трофеи</button>`;
+
     return `<div class="gcar" style="--rc:${RARS[c.r].color}">
       <div class="art">${getCarVisual(c)}</div>
       <div>
@@ -1894,7 +2262,8 @@ function getGarageListHTML(){
         <div class="rowplate">${plate ? plateHTML(plate, 'sm') : '<span style="font-size:11px;color:var(--mut)">Без номера</span>'}</div>
         <div class="prc">${fmt(c.price)}</div>
         <div class="acts">
-          <button class="btn btn-gold" data-act="totrophy" data-id="${c.id}">В трофеи</button>
+          ${marketBtn}
+          ${trophyBtn}
           ${plateBtn}
           ${sellBtn}
         </div>
@@ -2021,6 +2390,7 @@ function getPlatesListHTML() {
       </div>
       <div class="desc">${p.desc}</div>
       <div class="acts" style="margin-top:9px;">
+        <button class="btn btn-gold" onclick="sellToMarket('plate', ${p.id})">На рынок</button>
         ${isCursed 
             ? `<button class="btn btn-red" data-act="delplateid" data-id="${p.id}">Удалить</button>`
             : `<button class="btn btn-go" data-act="sellplateid" data-id="${p.id}">Продать за ${num(p.price)} ₽</button>`
@@ -3011,6 +3381,8 @@ document.querySelectorAll('.main-tab').forEach(btn => {
 
 $('#spinBtn').addEventListener('click', doSpin);
 
+$('#marketBtn').addEventListener('click', window.toggleMarket);
+
 $('#homeBtn').addEventListener('click', () => {
     renderTab(curTab);
     $('#drawer').classList.add('on');
@@ -3220,7 +3592,7 @@ window.sellAllPlatesFromLimit = function() {
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getAuth, signInAnonymously, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, linkWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, setDoc, collection, addDoc, onSnapshot, deleteDoc, query, orderBy, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBksufYvk30uFFmyoDNUuDUrjgTf1HPga8",
@@ -3244,6 +3616,13 @@ window.sellAllPlatesFromLimit = function() {
   window.firestoreSetDoc = setDoc;
   window.firebaseUser = null;
   window.isWaitingForAuth = false;
+  window.firestoreCollection = collection;
+  window.firestoreAddDoc = addDoc;
+  window.firestoreOnSnapshot = onSnapshot;
+  window.firestoreDeleteDoc = deleteDoc;
+  window.firestoreQuery = query;
+  window.firestoreOrderBy = orderBy;
+  window.firestoreRunTransaction = runTransaction;
 
   onAuthStateChanged(auth, async (user) => {
     if (user) {
@@ -3264,6 +3643,8 @@ window.sellAllPlatesFromLimit = function() {
       }
 
       await window.load(); 
+
+      window.startMarketListener();
       
     } else {
       console.log("Ожидание выбора аккаунта...");
