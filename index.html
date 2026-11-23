@@ -640,6 +640,7 @@ function salesHTML() {
            <div class="d">Ваши накопления с продаж</div>
            <div class="price" style="font-size: 20px; color: #ff9f2e;">${fmt(state.adminBalance || 0)}</div>
          </div>
+         <button class="btn btn-go" onclick="withdrawAdminBalance()" ${(!state.adminBalance || state.adminBalance <= 0) ? 'disabled' : ''}>Вывести</button>
        </div>
        <div class="sect-title" style="margin-top: 20px;"><h3>Логи комиссии</h3></div>
        <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:20px;">
@@ -3712,6 +3713,35 @@ window.sellAllPlatesFromLimit = function() {
     document.getElementById('drawer').classList.add('on');
     document.getElementById('ovl').classList.add('on');
     renderTab(tab);
+};
+
+window.withdrawAdminBalance = async function() {
+    if (!state.isAdmin || !state.adminBalance || state.adminBalance <= 0) return;
+    try {
+        const adminDocId = window.firebaseUser.email.replace(/[.@]/g, '_');
+        const adminRef = window.firestoreDoc(window.firebaseDB, "admins", adminDocId);
+        const userRef = window.firestoreDoc(window.firebaseDB, "users", window.firebaseUser.uid);
+
+        await window.firestoreRunTransaction(window.firebaseDB, async (transaction) => {
+            const adminDoc = await transaction.get(adminRef);
+            const userDoc = await transaction.get(userRef);
+            if (!adminDoc.exists()) throw "Нет данных админа";
+            if (!userDoc.exists()) throw "Нет данных пользователя";
+
+            const adminData = adminDoc.data();
+            const userData = userDoc.data();
+            const amount = adminData.balance;
+            if (amount <= 0) throw "Нет средств для вывода";
+
+            // Обнуляем баланс админа и переводим игроку
+            transaction.update(adminRef, { balance: 0 });
+            transaction.update(userRef, { money: (userData.money || 0) + amount });
+        });
+        toast('Средства выведены на игровой баланс!', 'gold');
+    } catch (e) {
+        console.error(e);
+        toast(typeof e === 'string' ? e : 'Ошибка вывода', 'err');
+    }
 };
 
 </script>
