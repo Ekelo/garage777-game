@@ -436,4 +436,14 @@ select,
 
 #marketBtn { background: rgba(21,27,36,.92); border-color: var(--gold); color: var(--gold); }
 #marketBtn:hover { background: var(--gold); color: #07271a; }
+
+.market-price {
+    font-family: 'Russo One';
+    color: var(--go);
+    font-size: 18px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 }
