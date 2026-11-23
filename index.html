@@ -2682,7 +2682,7 @@ function renderTab(tab){
   curTab = tab;
   document.querySelectorAll('.dtab').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
 
-  const titles = {menu:'Меню', garage:'Гараж', platesInv:'Номера', trophies:'Трофеи', coll:'Коллекция', upg:'Улучшения', images:'Фото'};
+    const titles = {menu:'Меню', garage:'Гараж', platesInv:'Номера', trophies:'Трофеи', coll:'Коллекция', upg:'Улучшения', sales: 'Продажи'};
   $('#dTitle').textContent = titles[tab] || 'Меню';
 
   const body = $('#dBody');
