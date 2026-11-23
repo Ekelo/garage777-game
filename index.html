@@ -2692,20 +2692,22 @@ function upgHTML(){
     rebirthBtn = `<div class="upg" style="border-left: 4px solid #ff4d6d"><div class="info"><h4>Перерождение</h4><div class="d">Достигнут максимальный уровень (5).</div></div></div>`;
   }
 
-  return `<div class="sect-title"><h3>Улучшения (макс. ур. ${maxLvl})</h3><span class="cnt">${fmt(state.money)}</span></div>` +
+  return `<div class="sect-title"><h3>Улучшения</h3><span class="cnt">${fmt(state.money)}</span></div>` +
     UPGRADES.map(u => {
-      // Для этих двух улучшений максимум всегда 5, остальные растут от ребёрнов
-      let upgMaxLvl = (u.id === 'garageCap' || u.id === 'plateCap') ? 5 : maxLvl;
-      
       const lvl = state.upgrades[u.id] || 0;
-      const maxed = lvl >= upgMaxLvl;
+      
+      // Вот здесь магия: для гаражей и номеров жестко ставим 5, для остальных - maxLvl
+      const isSpecial = (u.id === 'garageCap' || u.id === 'plateCap');
+      const currentMax = isSpecial ? 5 : maxLvl;
+
+      const maxed = lvl >= currentMax;
       const cost = u.costs ? u.costs[lvl] : u.base * (lvl + 1);
       
       return `<div class="upg">
         <div class="info">
-          <h4>${u.name} <span style="color:var(--mut);font-size:11px">ур. ${lvl}/${upgMaxLvl}</span></h4>
+          <h4>${u.name} <span style="color:var(--mut);font-size:11px">ур. ${lvl}/${currentMax}</span></h4>
           <div class="d">${u.desc}</div>
-          <div class="price">${maxed ? 'Максимум' : fmt(cost)}</div>
+          <div class="price">${maxed ? 'Максимум' : (cost ? fmt(cost) : 'Максимум')}</div>
         </div>
         <button class="btn btn-go" data-act="upg" data-id="${u.id}" ${maxed ? 'disabled' : ''}>Купить</button>
       </div>`;
