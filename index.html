@@ -131,6 +131,9 @@
     <button class="dtab" data-tab="upg">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10M6 20v-6M18 20V4"/></svg>
       Улучшения</button>
+    <button class="dtab" data-tab="sales">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Продажи</button>
   </nav>
   <div id="dBody"></div>
 </aside>
@@ -579,6 +582,28 @@ window.startMarketListener = function() {
     });
 };
 
+function salesHTML() {
+  let html = `<div class="sect-title"><h3>История продаж</h3></div>`;
+  
+  if (!state.salesLog || state.salesLog.length === 0) {
+    return html + `<div class="empty-box">У вас пока нет операций на рынке.</div>`;
+  }
+
+  // Сортируем от новых к старым
+  const logs = [...state.salesLog].sort((a, b) => b.date - a.date);
+
+  html += `<div style="display:flex; flex-direction:column; gap:8px;">`;
+  logs.forEach(log => {
+    const dateStr = new Date(log.date).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    html += `<div class="upg" style="border-left: 4px solid var(--go); flex-direction: column; align-items: flex-start; gap: 4px; padding: 12px;">
+        <div style="font-size: 11px; color: var(--mut);">${dateStr}</div>
+        <div style="font-size: 13px; font-weight: 600; line-height: 1.4;">${log.text}</div>
+      </div>`;
+  });
+  html += `</div>`;
+  return html;
+}
+
 function renderMarket() {
     const container = document.getElementById('marketListContainer');
     const count = document.getElementById('marketCount');
@@ -793,9 +818,11 @@ window.executeBuy = async function(lotId) {
         const sellerRef = window.firestoreDoc(window.firebaseDB, "users", lot.sellerId);
         const lotRef = window.firestoreDoc(window.firebaseDB, "market", lotId);
 
-        // Аккаунты для комиссии
         const adminEmails = ['kystic81_gmail_com', 'artemrussiaabdullin_mail_ru', 'maksim186ruuss_gmail_com'];
         const adminRefs = adminEmails.map(email => window.firestoreDoc(window.firebaseDB, "admins", email));
+        const buyerName = state.playerName || window.guestDisplayId || 'Аноним';
+        const itemName = lot.type === 'car' ? `${lot.item.brand} ${lot.item.model}` : `Номер ${lot.item.main}`;
+        const plateInfo = (lot.type === 'car' && lot.item.plate) ? ` с номером ${lot.item.plate.main}` : '';
 
         await window.firestoreRunTransaction(window.firebaseDB, async (transaction) => {
             const lotDoc = await transaction.get(lotRef);
@@ -804,7 +831,6 @@ window.executeBuy = async function(lotId) {
             const buyerDoc = await transaction.get(buyerRef);
             const sellerDoc = await transaction.get(sellerRef);
             
-            // Читаем админов ДО любых изменений
             const adminDocs = [];
             for (let ref of adminRefs) {
                 adminDocs.push(await transaction.get(ref));
@@ -814,33 +840,56 @@ window.executeBuy = async function(lotId) {
             const buyerData = buyerDoc.data();
             if (buyerData.money < lot.price) throw "Недостаточно средств!";
 
-            // 1. Списание у покупателя
+            // 1. Списание у покупателя и добавление лога
             let newGarage = buyerData.garage || [];
             let newPlates = buyerData.plates || [];
-            lot.item.ownerCount = (lot.item.ownerCount || 1) + 1; // Увеличиваем счетчик владельцев
+            let buyerLogs = buyerData.salesLog || [];
+            
+            lot.item.ownerCount = (lot.item.ownerCount || 1) + 1;
             if (lot.type === 'car') newGarage.push(lot.item);
             else newPlates.push(lot.item);
 
-            transaction.update(buyerRef, { money: buyerData.money - lot.price, garage: newGarage, plates: newPlates });
+            buyerLogs.push({ date: Date.now(), text: `Вы купили ${itemName}${plateInfo} у ${lot.sellerName} за ${fmt(lot.price)}` });
+            
+            transaction.update(buyerRef, { 
+                money: buyerData.money - lot.price, 
+                garage: newGarage, 
+                plates: newPlates, 
+                salesLog: buyerLogs 
+            });
 
             // 2. Расчет комиссии
-            // Машины: 9% (по 3% на 3 аккаунта). Номера: 15% (по 5% на 3 аккаунта)
             const adminShare = lot.type === 'car' ? Math.floor(lot.price * 0.03) : Math.floor(lot.price * 0.02);
             const totalTax = adminShare * 3;
             const sellerGet = lot.price - totalTax;
 
-            // 3. Начисление продавцу
+            // 3. Начисление продавцу и лог
             if (sellerDoc.exists()) {
-                transaction.update(sellerRef, { money: (sellerDoc.data().money || 0) + sellerGet });
+                const sellerData = sellerDoc.data();
+                let sellerLogs = sellerData.salesLog || [];
+                sellerLogs.push({ date: Date.now(), text: `Вы продали ${itemName}${plateInfo} игроку ${buyerName}. Получено: ${fmt(sellerGet)}` });
+                
+                transaction.update(sellerRef, { 
+                    money: (sellerData.money || 0) + sellerGet,
+                    salesLog: sellerLogs
+                });
             }
 
-            // 4. Начисление комиссии админам
+            // 4. Начисление комиссии админам и их логи
             adminRefs.forEach((ref, index) => {
+                let currentBalance = 0;
+                let adminLogs = [];
                 if (adminDocs[index].exists()) {
-                    transaction.update(ref, { balance: (adminDocs[index].data().balance || 0) + adminShare });
-                } else {
-                    transaction.set(ref, { balance: adminShare });
+                    currentBalance = adminDocs[index].data().balance || 0;
+                    adminLogs = adminDocs[index].data().adminLogs || [];
                 }
+                
+                adminLogs.push({ date: Date.now(), text: `Комиссия за ${itemName} от ${lot.sellerName}. Получено: ${fmt(adminShare)}` });
+                
+                transaction.set(ref, { 
+                    balance: currentBalance + adminShare,
+                    adminLogs: adminLogs
+                });
             });
 
             transaction.delete(lotRef);
@@ -848,10 +897,14 @@ window.executeBuy = async function(lotId) {
 
         toast('Успешная покупка!', 'gold');
         
-        // Обновляем локальное состояние
+        // Обновляем локально
         state.money -= lot.price;
         if (lot.type === 'car') state.garage.push(lot.item);
         if (lot.type === 'plate') state.plates.push(lot.item);
+        
+        if (!state.salesLog) state.salesLog = [];
+        state.salesLog.push({ date: Date.now(), text: `Вы купили ${itemName}${plateInfo} у ${lot.sellerName} за ${fmt(lot.price)}` });
+
         updateWallet();
         
     } catch (e) {
@@ -1543,7 +1596,8 @@ const state = {
   pityL: 0,
   pityM: 0,
   carImages: {},
-  playerName: ''
+  playerName: '',
+  salesLog: []
 };
 
 let curTab = 'menu';
@@ -1716,6 +1770,7 @@ window.load = async function() {
       state.pityM = s.pityM || 0;
       state.carImages = Object.assign({}, window.DEFAULT_CAR_IMAGES || {}, s.carImages || {});
       state.playerName = s.playerName || '';
+      state.salesLog = s.salesLog || [];
     } else {
       console.log("🆕 Новый игрок. Создаём первое сохранение...");
       
@@ -2638,6 +2693,7 @@ function renderTab(tab){
   if(tab === 'coll')   body.innerHTML = collHTML();
   if(tab === 'upg')    body.innerHTML = upgHTML();
   if(tab === 'images'){ body.innerHTML = imagesHTML(); bindImages(); }
+  if(tab === 'sales') { body.innerHTML = salesHTML(); }
 }
 
 function bindGarage(){
