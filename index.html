@@ -1651,8 +1651,16 @@ const UPGRADES = [
   {id:'plateCap', name:'Хранилище номеров',   desc:'+ макс. мест для номеров', max:5, costs:[500000, 2700000, 10500000, 148800000, 200000000], caps:[250, 750, 1900, 5000, 10000]}
 ];
 
-const getGarageCap = () => [10, 15, 30, 100, 555, 1000][state.upgrades.garageCap || 0];
-const getPlateCap = () => [100, 250, 750, 1900, 5000, 10000][state.upgrades.plateCap || 0];
+const getGarageCap = () => {
+    let lvl = state.upgrades.garageCap || 0;
+    if (lvl > 5) lvl = 5; // Жесткое ограничение
+    return [10, 15, 30, 100, 555, 1000][lvl];
+};
+const getPlateCap = () => {
+    let lvl = state.upgrades.plateCap || 0;
+    if (lvl > 5) lvl = 5; // Жесткое ограничение
+    return [100, 250, 750, 1900, 5000, 10000][lvl];
+};
 
 const state = {
   money: START_MONEY,
@@ -2686,12 +2694,16 @@ function upgHTML(){
 
   return `<div class="sect-title"><h3>Улучшения (макс. ур. ${maxLvl})</h3><span class="cnt">${fmt(state.money)}</span></div>` +
     UPGRADES.map(u => {
+      // Для этих двух улучшений максимум всегда 5, остальные растут от ребёрнов
+      let upgMaxLvl = (u.id === 'garageCap' || u.id === 'plateCap') ? 5 : maxLvl;
+      
       const lvl = state.upgrades[u.id] || 0;
-      const maxed = lvl >= maxLvl;
+      const maxed = lvl >= upgMaxLvl;
       const cost = u.costs ? u.costs[lvl] : u.base * (lvl + 1);
+      
       return `<div class="upg">
         <div class="info">
-          <h4>${u.name} <span style="color:var(--mut);font-size:11px">ур. ${lvl}/${maxLvl}</span></h4>
+          <h4>${u.name} <span style="color:var(--mut);font-size:11px">ур. ${lvl}/${upgMaxLvl}</span></h4>
           <div class="d">${u.desc}</div>
           <div class="price">${maxed ? 'Максимум' : fmt(cost)}</div>
         </div>
@@ -3154,8 +3166,14 @@ function handleAction(e){
     const u = UPGRADES.find(x => x.id === id);
     if(!u) return;
     const lvl = state.upgrades[u.id] || 0;
-    if(lvl >= 5 + state.rebirths) return;
-    const cost = u.costs ? u.costs[lvl] : u.base * (lvl + 1); // <-- Новая цена
+    
+    // Жесткий лимит для этих улучшений
+    let upgMaxLvl = (u.id === 'garageCap' || u.id === 'plateCap') ? 5 : (5 + state.rebirths);
+    if(lvl >= upgMaxLvl) return;
+
+    const cost = u.costs ? u.costs[lvl] : u.base * (lvl + 1);
+    if (!cost || isNaN(cost)) return toast('Достигнут максимальный уровень', 'err'); // Защита от undefined
+    
     if(state.money < cost){ toast('Недостаточно денег', 'err'); return; }
     state.money -= cost;
     state.upgrades[u.id] = lvl + 1;
