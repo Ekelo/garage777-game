@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://ekelo.github.io/garage777-game/sitemap.xml
