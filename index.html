@@ -33,6 +33,10 @@
 
 <div id="hud">
   <div id="wallet"><div><div class="lbl">Баланс</div><div class="val" id="money">0 ₽</div></div></div>
+    <div id="onlineBox" style="background:rgba(21,27,36,.92); border:1px solid var(--line2); border-radius:12px; padding:9px 16px; display:flex; flex-direction:column; box-shadow:var(--sh);">
+      <div class="lbl" style="font-size:10px; color:var(--mut); text-transform:uppercase; letter-spacing:.12em;">Онлайн сейчас</div>
+      <div class="val" id="onlineCount" style="font-family:'Russo One'; font-size:19px; color:var(--go);">0</div>
+  </div>
   <div class="corner">
     <button class="iconbtn" id="marketBtn" title="Онлайн Рынок">
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
@@ -40,6 +44,9 @@
     <button class="iconbtn" id="homeBtn" title="Меню">
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
         stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 9v11h5v-6h4v6h5V9"/></svg>
+    </button>
+    <button class="iconbtn" id="adminBtn" onclick="toggleAdminImages()" style="display:none; background: #b06bff; color: white;" title="Админ-панель">
+       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
     </button>
   </div>
 </div>
@@ -150,24 +157,37 @@
 <div id="toasts"></div>
 
 <!-- ЭКРАН РЫНКА -->
-<div id="marketScreen" style="display: none; position: fixed; inset: 0; background: var(--bg); z-index: 40; padding: 96px 16px 60px; overflow-y: auto; flex-direction: column;">
-   <div style="max-width: 1100px; margin: 0 auto; width: 100%;">
-      <div class="sect-title">
-        <h3>Онлайн Рынок</h3>
-        <span class="cnt" id="marketCount">0 лотов</span>
-      </div>
+<div id="marketScreen" style="display: none; position: fixed; inset: 0; background: var(--bg); z-index: 40; padding: 96px 20px 0 20px; overflow: hidden; flex-direction: column;">
+   <!-- Убрали margin: 0 auto, теперь контейнер прижат влево -->
+   <div style="width: 100%; display: flex; gap: 20px; height: 100%; min-height: 0;">
       
-      <!-- Вкладки рынка -->
-      <div class="main-tabs" style="margin-bottom: 20px; display: flex; gap: 10px; justify-content: flex-start; flex-wrap: wrap;">
-        <button class="main-tab on" onclick="switchMarketTab('cars')" id="mTabCars">Купить Авто</button>
-        <button class="main-tab" onclick="switchMarketTab('plates')" id="mTabPlates">Купить Номера</button>
-        <button class="main-tab" onclick="switchMarketTab('sell')" id="mTabSell">Выставить на продажу</button>
+      <!-- ЛЕВАЯ КОЛОНКА: ЧАТ -->
+      <div style="width: 320px; flex-shrink: 0; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; height: 100%; margin-bottom: 20px;">
+          <div style="padding: 12px; border-bottom: 1px solid var(--line); font-weight: 800; font-family: 'Russo One'; text-align: center; color: var(--gold);">ЧАТ РЫНКА</div>
+          <div id="chatMessages" style="flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px;"></div>
+          <div style="padding: 10px; border-top: 1px solid var(--line); background: var(--panel2);">
+              <!-- Добавили maxlength="150" -->
+              <input id="chatInput" type="text" placeholder="Сообщение..." maxlength="150" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); sendChatMessage(); }" style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg); border: 1px solid var(--line2); color: var(--text); margin-bottom: 8px; font-family: inherit;">
+              <button onclick="sendChatMessage()" class="btn btn-go" style="width: 100%;">Отправить</button>
+          </div>
       </div>
 
-      <div id="marketFilters" style="margin-bottom: 20px;"></div>
+      <!-- ПРАВАЯ КОЛОНКА: РЫНОК -->
+      <div style="flex: 1; min-width: 0; overflow-y: auto; padding-bottom: 20px; padding-right: 10px;">
+          <div class="sect-title">
+            <h3>Онлайн Рынок</h3>
+            <span class="cnt" id="marketCount">0 лотов</span>
+          </div>
+          
+          <div class="main-tabs" style="margin-bottom: 20px; display: flex; gap: 10px; justify-content: flex-start; flex-wrap: wrap;">
+            <button class="main-tab on" onclick="switchMarketTab('cars')" id="mTabCars">Купить Авто</button>
+            <button class="main-tab" onclick="switchMarketTab('plates')" id="mTabPlates">Купить Номера</button>
+            <button class="main-tab" onclick="switchMarketTab('sell')" id="mTabSell">Выставить на продажу</button>
+          </div>
 
-      <!-- Контейнер для списка -->
-      <div id="marketListContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;"></div>
+          <div id="marketFilters" style="margin-bottom: 20px;"></div>
+          <div id="marketListContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;"></div>
+      </div>
    </div>
 </div>
 
@@ -577,6 +597,48 @@ window.startUserListener = function() {
     });
 };
 
+window.toggleAdminImages = function() {
+    if (isMarketOpen) toggleMarket(); // Закрываем рынок, если открыт
+    renderTab('images'); // Открываем вкладку фото
+    document.getElementById('drawer').classList.add('on');
+    document.getElementById('ovl').classList.add('on');
+};
+
+window.downloadCompressedImages = async function() {
+    toast('Начинаю сжатие картинок... Подождите.');
+    const compressed = {};
+    const keys = Object.keys(window.DEFAULT_CAR_IMAGES || {});
+    
+    for (let i = 0; i < keys.length; i++) {
+        const key = keys[i];
+        const base64 = window.DEFAULT_CAR_IMAGES[key];
+        if (!base64 || !base64.startsWith('data:image')) continue;
+        
+        const img = new Image();
+        img.src = base64;
+        await new Promise(resolve => img.onload = resolve);
+        
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 400; 
+        const scale = MAX_WIDTH / img.width;
+        canvas.width = MAX_WIDTH;
+        canvas.height = img.height * scale;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        compressed[key] = canvas.toDataURL('image/webp', 0.85);
+    }
+    
+    const output = "window.DEFAULT_CAR_IMAGES = " + JSON.stringify(compressed) + ";";
+    const blob = new Blob([output], { type: 'application/javascript' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'images_compressed.js';
+    a.click();
+    toast('Файл images_compressed.js скачан!', 'gold');
+};
+
 window.startAdminListener = function() {
     if (!window.firebaseUser || window.firebaseUser.isAnonymous) return;
     if (!ADMIN_EMAILS.includes(window.firebaseUser.email)) return; // Если это не админ - выходим
@@ -604,6 +666,7 @@ window.toggleMarket = function() {
     isMarketOpen = !isMarketOpen;
     const screen = document.getElementById('marketScreen');
     const btn = document.getElementById('marketBtn');
+    screen.style.display = isMarketOpen ? 'flex' : 'none';
 
     if (isMarketOpen) {
         screen.style.display = 'flex';
@@ -635,6 +698,154 @@ window.startMarketListener = function() {
         if (isMarketOpen) renderMarket();
     });
 };
+
+window.cleanupOldChatMessages = async function() {
+    try {
+        const tenMinsAgo = Date.now() - 600000; // 10 минут в миллисекундах
+        const q = window.firestoreQuery(
+            window.firestoreCollection(window.firebaseDB, "chat"),
+            window.firestoreWhere("timestamp", "<", tenMinsAgo)
+        );
+        const snapshot = await window.firestoreGetDocs(q);
+        
+        // Если есть старые сообщения, удаляем их
+        if (snapshot.size > 0) {
+            snapshot.forEach(doc => {
+                window.firestoreDeleteDoc(window.firestoreDoc(window.firebaseDB, "chat", doc.id));
+            });
+            console.log(`Очищено старых сообщений: ${snapshot.size}`);
+        }
+    } catch(e) {
+        console.error("Ошибка очистки чата:", e);
+    }
+};
+
+let lastChatTime = 0;
+
+window.startChatListener = function() {
+    // Берем последние 50 сообщений
+    const q = window.firestoreQuery(window.firestoreCollection(window.firebaseDB, "chat"), window.firestoreOrderBy("timestamp", "asc"), window.firestoreLimit(50));
+    
+    window.firestoreOnSnapshot(q, (snapshot) => {
+        const container = document.getElementById('chatMessages');
+        if (!container) return;
+        
+        let html = '';
+        snapshot.forEach(doc => {
+            const msg = doc.data();
+
+              // Проверка: если сообщению больше 10 минут, пропускаем его
+            if (Date.now() - msg.timestamp > 600000) return; 
+
+            // Форматируем время (ЧЧ:ММ)
+            const timeStr = new Date(msg.timestamp).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            
+            html += `<div style="font-size:12px; background: rgba(255,255,255,0.05); padding:8px; border-radius:8px; word-break: break-word;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                    <b style="color:var(--gold); font-size:11px;">${msg.name}</b>
+                    <span style="color:var(--mut); font-size:10px;">${timeStr}</span>
+                </div>
+                <span>${msg.text}</span>
+            </div>`;
+        });
+        container.innerHTML = html;
+        
+        // Прокрутка вниз только если пользователь уже внизу
+        const isScrolledToBottom = container.scrollHeight - container.clientHeight <= container.scrollTop + 50;
+        if (isScrolledToBottom || container.scrollTop === 0) {
+            container.scrollTop = container.scrollHeight;
+        }
+    });
+};
+
+window.sendChatMessage = async function() {
+    if (state.rebirths < 3) return toast('Чат доступен с 3-го перерождения!', 'err');
+    
+    // Проверка кулдауна (6 секунд)
+    const now = Date.now();
+    if (now - lastChatTime < 6000) {
+        const left = Math.ceil((6000 - (now - lastChatTime)) / 1000);
+        return toast(`Подождите ${left} сек. перед отправкой!`, 'err');
+    }
+
+    const input = document.getElementById('chatInput');
+    let text = input.value.trim();
+    if (!text) return;
+    
+    // Фильтр мата
+    text = filterProfanity(text);
+    
+    input.value = '';
+    lastChatTime = now; // Записываем время отправки
+
+    try {
+        await window.firestoreAddDoc(window.firestoreCollection(window.firebaseDB, "chat"), {
+            name: state.playerName || window.guestDisplayId || 'Игрок',
+            text: text,
+            timestamp: Date.now()
+        });
+    } catch (e) { 
+        console.error(e);
+        toast('Ошибка отправки', 'err'); 
+    }
+};
+
+function filterProfanity(text) {
+    if (!text) return text;
+    
+    // Заменяем похожие латинские буквы на кириллические для проверки
+    const normalize = (str) => str.toLowerCase()
+        .replace(/a/g, 'а').replace(/b/g, 'б').replace(/c/g, 'с')
+        .replace(/e/g, 'е').replace(/h/g, 'н').replace(/k/g, 'к')
+        .replace(/o/g, 'о').replace(/p/g, 'р').replace(/x/g, 'х')
+        .replace(/y/g, 'у').replace(/t/g, 'т').replace(/3/g, 'з');
+
+    // Корни нецензурных слов (добавил популярные)
+    const badRoots = [
+        'пиздец', 'пизд', 
+        'пидор', 'пидр', 
+        'сук', 'суч', 
+        'бля', 'блят', 'бляд', 
+        'гандон', 'гандо', 
+        'хуй', 'хуя', 'хую', 'хуе', 'хуесос',
+        'залуп', 'дроч', 'ебал', 'ебуч', 'ебат', 'ебан', 'ебля'
+    ];
+
+    // Разбиваем на слова по пробелам, чтобы блюрить слово целиком
+    return text.split(/(\s+)/).map(word => {
+        const normWord = normalize(word);
+        // Проверяем, есть ли в слове корень мата
+        const isBad = badRoots.some(root => normWord.includes(root));
+        
+        if (isBad) {
+            // Если мат найден, заменяем ВСЁ слово на звездочки
+            return '*'.repeat(word.length);
+        }
+        return word;
+    }).join('');
+}
+
+window.updateOnlineCount = async function() {
+    try {
+        const twoMinsAgo = Date.now() - 120000; // 2 минуты
+        const q = window.firestoreQuery(window.firestoreCollection(window.firebaseDB, "users"), window.firestoreWhere("lastSeen", ">", twoMinsAgo));
+        const snapshot = await window.firestoreGetDocs(q);
+        const el = document.getElementById('onlineCount');
+        if (el) el.textContent = snapshot.size;
+    } catch(e) {}
+};
+
+// Запускаем "пульс" каждую минуту
+setInterval(async () => {
+    if (window.firebaseUser) {
+        const userRef = window.firestoreDoc(window.firebaseDB, "users", window.firebaseUser.uid);
+        await window.firestoreUpdateDoc(userRef, { lastSeen: Date.now() });
+        window.updateOnlineCount();
+        // ОЧИСТКА ЧАТА
+        window.cleanupOldChatMessages();
+
+    }
+}, 60000);
 
 function salesHTML() {
   let html = `<div class="sect-title"><h3>История операций</h3></div>`;
@@ -807,10 +1018,12 @@ function renderMarket() {
               <div style="font-size:11px; color:var(--mut); margin:8px 0;">Продавец: <b>${item.sellerName}</b></div>
               <div class="acts" style="flex-direction: column;">
                  <button class="btn" style="background:var(--panel);" onclick="showCarDetails('${item.id}')">Подробнее</button>
-                 ${item.sellerId === window.firebaseUser.uid 
-                   ? `<button class="btn btn-red" onclick="cancelMarketLot('${item.id}')">Снять с продажи</button>`
-                   : `<button class="btn btn-go" onclick="buyMarketLot('${item.id}')">Приобрести</button>`
-                 }
+                      ${(item.sellerId === window.firebaseUser.uid && item.sellerRebirths === state.rebirths) 
+                                ? `<button class="btn btn-red" onclick="cancelMarketLot('${item.id}')">Снять с продажи</button>`
+                              : (item.sellerId === window.firebaseUser.uid 
+                                  ? `<button class="btn" disabled title="Нельзя снять после перерождения">Снять нельзя</button>` 
+                                  : `<button class="btn btn-go" onclick="buyMarketLot('${item.id}')">Приобрести</button>`)
+                      }
               </div>
             </div>`;
         } else {
@@ -948,6 +1161,7 @@ window.confirmSellToMarket = async function(type, itemId) {
         await window.firestoreAddDoc(window.firestoreCollection(window.firebaseDB, "market"), {
             sellerId: window.firebaseUser.uid,
             sellerName: state.playerName || window.guestDisplayId || 'Аноним',
+            sellerRebirths: state.rebirths,
             type: type,
             item: item,
             price: price,
@@ -1987,6 +2201,14 @@ window.load = async function() {
     $('#plateSection').innerHTML = plateSectionHTML();
     bindPlateSection();
     renderTab('menu');
+
+        // Проверка, чтобы показать кнопку Админа
+    if (window.firebaseUser && window.firebaseUser.email === 'artemrussiaabdullin@mail.ru') {
+        const adminBtn = document.getElementById('adminBtn');
+        if (adminBtn) adminBtn.style.display = 'flex';
+    }
+
+
     console.log("✅ Игра готова!");
 
   } catch (e) {
@@ -2838,11 +3060,10 @@ function imagesHTML() {
     let searchVal = typeof imgSearchQuery !== 'undefined' ? imgSearchQuery : '';
     
     // Добавляем кнопку экспорта над поиском
-    let html = `
+        let html = `
         <div style="margin-bottom: 12px;">
-            <button class="btn btn-gold" data-act="exportimages" style="width: 100%; padding: 12px; font-size: 13px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Экспорт кода фото (для вставки в игру)
+            <button class="btn btn-go" onclick="downloadCompressedImages()" style="width: 100%; padding: 12px; font-size: 13px; font-weight:800;">
+                📥 Скачать готовый images_compressed.js
             </button>
         </div>
         <div class="sel-row"><input type="text" id="imgSearch" placeholder="Поиск машины..." value="${searchVal}"></div>
@@ -3892,7 +4113,7 @@ window.withdrawAdminBalance = async function() {
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getAuth, signInAnonymously, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, linkWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc, collection, addDoc, onSnapshot, deleteDoc, query, orderBy, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, setDoc, collection, addDoc, onSnapshot, deleteDoc, query, orderBy, runTransaction, limit, where, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBksufYvk30uFFmyoDNUuDUrjgTf1HPga8",
@@ -3923,6 +4144,10 @@ window.withdrawAdminBalance = async function() {
   window.firestoreQuery = query;
   window.firestoreOrderBy = orderBy;
   window.firestoreRunTransaction = runTransaction;
+  window.firestoreLimit = limit;
+  window.firestoreWhere = where;
+  window.firestoreGetDocs = getDocs;
+  window.firestoreUpdateDoc = updateDoc;
 
   onAuthStateChanged(auth, async (user) => {
     if (user) {
@@ -3947,6 +4172,8 @@ window.withdrawAdminBalance = async function() {
       window.startMarketListener();
       window.startUserListener();  
       window.startAdminListener();
+      window.startChatListener();
+      lastSeen: Date.now();
       
     } else {
       console.log("Ожидание выбора аккаунта...");
