@@ -723,21 +723,20 @@ window.cleanupOldChatMessages = async function() {
 let lastChatTime = 0;
 
 window.startChatListener = function() {
-    // Берем последние 50 сообщений
     const q = window.firestoreQuery(window.firestoreCollection(window.firebaseDB, "chat"), window.firestoreOrderBy("timestamp", "asc"), window.firestoreLimit(50));
     
     window.firestoreOnSnapshot(q, (snapshot) => {
         const container = document.getElementById('chatMessages');
         if (!container) return;
         
+        // 1. Проверяем, находится ли пользователь в самом низу ДО обновления
+        const isAtBottom = container.scrollHeight - container.clientHeight <= container.scrollTop + 50;
+        
         let html = '';
         snapshot.forEach(doc => {
             const msg = doc.data();
-
-              // Проверка: если сообщению больше 10 минут, пропускаем его
             if (Date.now() - msg.timestamp > 600000) return; 
 
-            // Форматируем время (ЧЧ:ММ)
             const timeStr = new Date(msg.timestamp).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
             
             html += `<div style="font-size:12px; background: rgba(255,255,255,0.05); padding:8px; border-radius:8px; word-break: break-word;">
@@ -748,11 +747,11 @@ window.startChatListener = function() {
                 <span>${msg.text}</span>
             </div>`;
         });
+        
         container.innerHTML = html;
         
-        // Прокрутка вниз только если пользователь уже внизу
-        const isScrolledToBottom = container.scrollHeight - container.clientHeight <= container.scrollTop + 50;
-        if (isScrolledToBottom || container.scrollTop === 0) {
+        // 2. Прокручиваем вниз только если пользователь был внизу
+        if (isAtBottom) {
             container.scrollTop = container.scrollHeight;
         }
     });
@@ -827,8 +826,8 @@ function filterProfanity(text) {
 
 window.updateOnlineCount = async function() {
     try {
-        const twoMinsAgo = Date.now() - 120000; // 2 минуты
-        const q = window.firestoreQuery(window.firestoreCollection(window.firebaseDB, "users"), window.firestoreWhere("lastSeen", ">", twoMinsAgo));
+        const oneMinAgo = Date.now() - 60000; // Если не заходил минуту - оффлайн
+        const q = window.firestoreQuery(window.firestoreCollection(window.firebaseDB, "users"), window.firestoreWhere("lastSeen", ">", oneMinAgo));
         const snapshot = await window.firestoreGetDocs(q);
         const el = document.getElementById('onlineCount');
         if (el) el.textContent = snapshot.size;
@@ -836,16 +835,25 @@ window.updateOnlineCount = async function() {
 };
 
 // Запускаем "пульс" каждую минуту
+// Пульс онлайна (каждые 15 секунд)
 setInterval(async () => {
-    if (window.firebaseUser) {
+    if (window.firebaseUser && document.visibilityState === 'visible') {
         const userRef = window.firestoreDoc(window.firebaseDB, "users", window.firebaseUser.uid);
         await window.firestoreUpdateDoc(userRef, { lastSeen: Date.now() });
         window.updateOnlineCount();
-        // ОЧИСТКА ЧАТА
         window.cleanupOldChatMessages();
-
     }
-}, 60000);
+}, 15000); 
+
+// Если игрок свернул вкладку и вернулся - сразу обновляем статус
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === 'visible' && window.firebaseUser) {
+        const userRef = window.firestoreDoc(window.firebaseDB, "users", window.firebaseUser.uid);
+        window.firestoreUpdateDoc(userRef, { lastSeen: Date.now() }).then(() => {
+            window.updateOnlineCount();
+        });
+    }
+});
 
 function salesHTML() {
   let html = `<div class="sect-title"><h3>История операций</h3></div>`;
