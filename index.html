@@ -2543,83 +2543,97 @@ function refreshPlatesList() {
   if (cont) cont.innerHTML = getPlatesListHTML();
 }
 
+async function animatePlateSlot(el, text, country) {
+    el.innerHTML = '';
+    const chars = text.split('');
+    const poolLetters = country === 'UA' ? 'АВЕІКМНОРСТХ' : 'АВЕКМНОРСТУХ';
+    
+    // Создаем контейнеры для каждого символа
+    const spans = chars.map(c => {
+        const span = document.createElement('span');
+        span.style.display = 'inline-block';
+        span.style.textAlign = 'center';
+        span.style.minWidth = '0.7em'; // Чтобы ширина не скакала
+        span.textContent = c === ' ' ? '\u00A0' : c;
+        el.appendChild(span);
+        return span;
+    });
+
+    // Прокручиваем каждый символ по очереди
+    for (let i = 0; i < chars.length; i++) {
+        if (chars[i] === ' ') continue; // Пробелы не крутим
+        
+        const span = spans[i];
+        const isDigit = /\d/.test(chars[i]);
+        const pool = isDigit ? '0123456789' : poolLetters;
+        
+        const duration = 600 + Math.random() * 400; // 0.6 - 1.0 сек на символ
+        const startTime = Date.now();
+        
+        await new Promise(resolve => {
+            const timer = setInterval(() => {
+                if (Date.now() - startTime >= duration) {
+                    clearInterval(timer);
+                    span.textContent = chars[i];
+                    span.style.color = 'var(--gold)'; // Подсвечиваем остановку
+                    span.style.textShadow = '0 0 10px var(--gold)';
+                    resolve();
+                } else {
+                    span.textContent = pool[Math.floor(Math.random() * pool.length)];
+                }
+            }, 50); // Меняем символ каждые 50мс
+        });
+    }
+}
+
 async function doSpinPlate(){
-  if(plateSpinning) return;
-
-  if (state.plates.length >= getPlateCap()) {
-      openModal('Хранилище переполнено', `<div style="text-align:center; padding:20px; font-size:14px; line-height:1.5;">Достигнут лимит номеров (${getPlateCap()}).<br>Чтобы продолжить, освободите место.</div>`,
-      `<button class="btn btn-go" onclick="goToTab('platesInv')">Перейти в номера</button>
-       <button class="btn btn-red" onclick="sellAllPlatesFromLimit()">Продать всё</button>`);
-      return;
-  }
-
-    if (selPlateType === 'commercial' && !state.unlockedTypes.commercial) {
-      confirmDialog('Покупка', 'Открыть коммерческие номера за 100 000 ₽?', () => {
-          if (state.money >= 100000) {
-              state.money -= 100000;
-              state.unlockedTypes.commercial = true;
-              updateWallet(); save();
-              doSpinPlate();
-          } else { toast('Недостаточно денег', 'err'); }
-      });
-      return;
-  }
-  if (selPlateType === 'police' && state.rebirths < 1) { toast('Требуется 1 перерождение для МВД', 'err'); return; }
-  if (selPlateType === 'diplomatic' && state.rebirths < 2) { toast('Требуется 2 перерождения для Дип. номеров', 'err'); return; }
-  if (selPlateType === 'military') {
-      if (state.rebirths < 1) { toast('Требуется 1 перерождение для Военных', 'err'); return; }
-      if (!state.unlockedTypes.military) {
-          confirmDialog('Покупка', 'Открыть военные номера за 1 500 000 ₽?', () => {
-              if (state.money >= 1500000) {
-                  state.money -= 1500000;
-                  state.unlockedTypes.military = true;
-                  updateWallet(); save();
-                  doSpinPlate();
-              } else { toast('Недостаточно денег', 'err'); }
-          });
-          return;
-      }
-  }
-
   const cost = plateCost();
   if(state.money < cost){ toast('Недостаточно денег для прокрутки номера', 'err'); return; }
 
   if(pendingPlate){
+    // Если старый номер не забрали, он улетает в инвентарь
     state.plates.push(pendingPlate);
     pendingPlate = null;
     refreshPlatesList();
   }
 
-  plateSpinning = true;
   state.money -= cost;
   updateWallet();
   save();
 
   const win = generatePlate(selCountry, selRegion, selPlateType);
-
   if (!win) {
       toast('Ошибка: не удалось сгенерировать уникальный номер', 'err');
-      plateSpinning = false;
       return;
   }
 
-  setTimeout(() => {
-      pendingPlate = win;
-      $('#plateSection').innerHTML = plateSectionHTML();
-      bindPlateSection();
+  pendingPlate = win;
+  $('#plateSection').innerHTML = plateSectionHTML();
+  bindPlateSection();
+  
+  const pEl = $('#plateResultBox').querySelector('.plate-container');
+  if (pEl) {
+      pEl.classList.add('pop-anim');
       
-      const pEl = $('#plateResultBox').querySelector('.plate-container');
-      if (pEl) {
-          pEl.classList.add('pop-anim');
-          if (win.rarity === 5) pEl.classList.add('glow-fancy');
-          else if (win.plateType === 'police') pEl.classList.add('glow-police');
-          else if (win.plateType === 'military') pEl.classList.add('glow-military');
-          else if (win.plateType === 'diplomatic') pEl.classList.add('glow-diplomatic');
+      // Включаем свечение
+      if (win.rarity === 5) pEl.classList.add('glow-fancy');
+      else if (win.plateType === 'police') pEl.classList.add('glow-police');
+      else if (win.plateType === 'military') pEl.classList.add('glow-military');
+      else if (win.plateType === 'diplomatic') pEl.classList.add('glow-diplomatic');
+      
+      // АНИМАЦИЯ ДЛЯ ЛЕГЕНДАРНЫХ И МИФИЧЕСКИХ
+      if (win.rarity >= 4) {
+          const textEl = pEl.querySelector('.plate-main-text');
+          if (textEl) {
+              textEl.innerHTML = ''; // Очищаем старый текст
+              animatePlateSlot(textEl, win.main, win.country).then(() => {
+                  if(win.famous) toast('⭐ Фартовый номер: ' + win.main, 'gold');
+              });
+          }
+      } else {
+          if(win.famous) toast('⭐ Фартовый номер: ' + win.main, 'gold');
       }
-      
-      if(win.famous) toast('⭐ Фартовый номер: ' + win.main, 'gold');
-      plateSpinning = false;
-  }, 150);
+  }
 }
 
 function menuHTML(){
@@ -2971,7 +2985,7 @@ function plateSectionHTML() {
 
 function bindPlateSection() {
   const spinBtn = $('#pSpinBtn');
-  if(spinBtn) spinBtn.addEventListener('click', doSpinPlate);
+  if(spinBtn) spinBtn.addEventListener('click', (e) => { e.stopPropagation(); doSpinPlate(); });
 
   const countrySel = $('#plateCountrySel');
   if(countrySel) countrySel.addEventListener('change', e => {
@@ -2984,13 +2998,23 @@ function bindPlateSection() {
   const typeSel = $('#plateTypeSel');
   if(typeSel) typeSel.addEventListener('change', e => { selPlateType = e.target.value; });
 
-  // Новый обработчик, который обновляет цену при смене региона
   const regSel = $('#regSel');
   if(regSel) regSel.addEventListener('change', e => { 
-    selRegion = +e.target.value; 
-    const pBtn = $('#pSpinBtn');
-    if(pBtn) pBtn.innerHTML = `КРУТИТЬ НОМЕР<span style="font-family:Manrope; display:block; font-size:12px; font-weight:800; letter-spacing:.12em; margin-top:2px;">· ${num(plateCost())} ₽</span>`;
+      selRegion = +e.target.value; 
+      const pBtn = $('#pSpinBtn');
+      if(pBtn) pBtn.innerHTML = `КРУТИТЬ НОМЕР<span style="font-family:Manrope; display:block; font-size:12px; font-weight:800; letter-spacing:.12em; margin-top:2px;">· ${num(plateCost())} ₽</span>`;
   });
+
+  // КЛИК ПО ВСЕЙ ОБЛАСТИ
+  const spinnerSection = document.getElementById('spinner-plates');
+  if (spinnerSection && !spinnerSection.dataset.clickBound) {
+      spinnerSection.dataset.clickBound = "true"; // Защита от дублирования
+      spinnerSection.addEventListener('click', (e) => {
+          // Если кликнули на селект, кнопку или другую кнопку (сохранить/продать) - ничего не делаем
+          if (e.target.closest('select') || e.target.closest('button')) return;
+          doSpinPlate();
+      });
+  }
 }
 
 function collHTML(){
