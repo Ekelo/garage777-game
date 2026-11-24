@@ -1186,6 +1186,18 @@ window.confirmSellToMarket = async function(type, itemId) {
     }
 };
 
+window.sellPendingToMarket = function() {
+    if (!pendingPlate) return;
+    state.plates.push(pendingPlate);
+    const id = pendingPlate.id;
+    pendingPlate = null;
+    save();
+    $('#plateSection').innerHTML = plateSectionHTML();
+    bindPlateSection();
+    refreshPlatesList();
+    sellToMarket('plate', id); // Открываем окно выставления на рынок
+};
+
 // Покупка лота (с комиссией)
 window.buyMarketLot = async function(lotId) {
     const lot = marketItems.find(i => i.id === lotId);
@@ -2544,30 +2556,31 @@ function refreshPlatesList() {
 }
 
 async function animatePlateSlot(el, text, country) {
+    window.isAnimatingPlate = true; // БЛОКИРОВКА КЛИКОВ
     el.innerHTML = '';
     const chars = text.split('');
     const poolLetters = country === 'UA' ? 'АВЕІКМНОРСТХ' : 'АВЕКМНОРСТУХ';
     
-    // Создаем контейнеры для каждого символа
+    // Создаем контейнеры для каждого символа, сразу заполняя их случайными значениями
     const spans = chars.map(c => {
         const span = document.createElement('span');
         span.style.display = 'inline-block';
         span.style.textAlign = 'center';
-        span.style.minWidth = '0.7em'; // Чтобы ширина не скакала
-        span.textContent = c === ' ' ? '\u00A0' : c;
+        span.style.minWidth = '0.7em'; 
+        // Ставим случайный символ вместо финального, чтобы не палить концовку
+        span.textContent = c === ' ' ? '\u00A0' : (/\d/.test(c) ? '0123456789'[Math.floor(Math.random()*10)] : poolLetters[Math.floor(Math.random()*poolLetters.length)]);
         el.appendChild(span);
         return span;
     });
 
-    // Прокручиваем каждый символ по очереди
     for (let i = 0; i < chars.length; i++) {
-        if (chars[i] === ' ') continue; // Пробелы не крутим
+        if (chars[i] === ' ') continue; 
         
         const span = spans[i];
         const isDigit = /\d/.test(chars[i]);
         const pool = isDigit ? '0123456789' : poolLetters;
         
-        const duration = 600 + Math.random() * 400; // 0.6 - 1.0 сек на символ
+        const duration = 600 + Math.random() * 400; 
         const startTime = Date.now();
         
         await new Promise(resolve => {
@@ -2575,23 +2588,25 @@ async function animatePlateSlot(el, text, country) {
                 if (Date.now() - startTime >= duration) {
                     clearInterval(timer);
                     span.textContent = chars[i];
-                    span.style.color = 'var(--gold)'; // Подсвечиваем остановку
+                    span.style.color = 'var(--gold)'; 
                     span.style.textShadow = '0 0 10px var(--gold)';
                     resolve();
                 } else {
                     span.textContent = pool[Math.floor(Math.random() * pool.length)];
                 }
-            }, 50); // Меняем символ каждые 50мс
+            }, 50); 
         });
     }
+    window.isAnimatingPlate = false; // СНИМАЕМ БЛОКИРОВКУ
 }
 
 async function doSpinPlate(){
+  if(window.isAnimatingPlate) return; // Блокируем клики во время анимации редкого номера
+
   const cost = plateCost();
   if(state.money < cost){ toast('Недостаточно денег для прокрутки номера', 'err'); return; }
 
   if(pendingPlate){
-    // Если старый номер не забрали, он улетает в инвентарь
     state.plates.push(pendingPlate);
     pendingPlate = null;
     refreshPlatesList();
@@ -2599,7 +2614,7 @@ async function doSpinPlate(){
 
   state.money -= cost;
   updateWallet();
-  save();
+  // Убрали save() отсюда, чтобы клики не лагали. Сохранение сработает при получении номера.
 
   const win = generatePlate(selCountry, selRegion, selPlateType);
   if (!win) {
@@ -2608,24 +2623,21 @@ async function doSpinPlate(){
   }
 
   pendingPlate = win;
-  $('#plateSection').innerHTML = plateSectionHTML();
-  bindPlateSection();
+  updatePlateResultUI(); // Обновляем ТОЛЬКО блок с номером, без перезагрузки списков
   
   const pEl = $('#plateResultBox').querySelector('.plate-container');
   if (pEl) {
       pEl.classList.add('pop-anim');
       
-      // Включаем свечение
       if (win.rarity === 5) pEl.classList.add('glow-fancy');
       else if (win.plateType === 'police') pEl.classList.add('glow-police');
       else if (win.plateType === 'military') pEl.classList.add('glow-military');
       else if (win.plateType === 'diplomatic') pEl.classList.add('glow-diplomatic');
       
-      // АНИМАЦИЯ ДЛЯ ЛЕГЕНДАРНЫХ И МИФИЧЕСКИХ
       if (win.rarity >= 4) {
           const textEl = pEl.querySelector('.plate-main-text');
           if (textEl) {
-              textEl.innerHTML = ''; // Очищаем старый текст
+              textEl.innerHTML = '';
               animatePlateSlot(textEl, win.main, win.country).then(() => {
                   if(win.famous) toast('⭐ Фартовый номер: ' + win.main, 'gold');
               });
@@ -2634,6 +2646,30 @@ async function doSpinPlate(){
           if(win.famous) toast('⭐ Фартовый номер: ' + win.main, 'gold');
       }
   }
+}
+
+function updatePlateResultUI() {
+    const box = document.getElementById('plateResultBox');
+    if (!box) return;
+    
+    if (!pendingPlate) {
+        box.className = 'plate-result-box';
+        box.innerHTML = `<div style="color:var(--mut); font-size:14px; margin-bottom: 20px;">Здесь появится номер</div>`;
+        return;
+    }
+    
+    box.className = 'plate-result-box has-result';
+    box.innerHTML = `
+        <div style="margin-bottom: 20px;">${plateHTML(pendingPlate, 'lg')}</div>
+        <div style="font-size:12px; font-weight:800; color:${PLATE_RARS[pendingPlate.rarity].color}; text-transform:uppercase; letter-spacing:1px; margin-bottom:5px;">${PLATE_RARS[pendingPlate.rarity].name}</div>
+        <div class="desc" style="color:var(--gold); font-style:italic; margin-bottom: 10px;">${pendingPlate.desc}</div>
+        <div style="font-family:'Russo One'; font-size:26px; margin-bottom: 20px;">${fmt(pendingPlate.price)}</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
+          <button class="btn btn-gold" data-act="keepplate">В коллекцию</button>
+          <button class="btn btn-go" data-act="sellplate">Продать за ${num(Math.floor(pendingPlate.price * 0.5))} ₽</button>
+          <button class="btn btn-gold" onclick="sellPendingToMarket()">На рынок</button>
+        </div>
+    `;
 }
 
 function menuHTML(){
@@ -2967,26 +3003,26 @@ function plateSectionHTML() {
                 <div style="font-family:'Russo One'; font-size:26px; margin-bottom: 20px;">${fmt(pendingPlate.price)}</div>
                 <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
                   <button class="btn btn-gold" data-act="keepplate">В коллекцию</button>
-                  <button class="btn btn-go" data-act="sellplate">Продать за ${num(pendingPlate.price)} ₽</button>
+                  <!-- Теперь продажа за 50% -->
+                  <button class="btn btn-go" data-act="sellplate">Продать за ${num(Math.floor(pendingPlate.price * 0.5))} ₽</button>
+                  <!-- Новая кнопка на рынок -->
+                  <button class="btn btn-gold" onclick="sellPendingToMarket()">На рынок</button>
                 </div>
               ` : `
                 <div style="color:var(--mut); font-size:14px; margin-bottom: 20px;">Здесь появится номер</div>
               `}
+            </div> 
+                        <div style="margin-top: 20px; text-align: center; padding-bottom: 10px;">
+                <div style="display:inline-block; padding: 12px 32px; background: var(--panel2); border: 1px solid var(--line2); border-radius: 12px; font-family:'Russo One'; font-size: 16px; color: var(--mut); letter-spacing: .08em;">
+                    СТОИМОСТЬ: <span id="plateSpinCost" style="color:var(--gold); margin-left: 5px;">${num(plateCost())} ₽</span>
+                </div>
             </div>
-            
-            <div style="margin-top: 20px; text-align: center;">
-                <button class="btn btn-go" id="pSpinBtn" style="width:100%; max-width: 300px; padding: 16px; font-family:'Russo One'; font-size: 18px; letter-spacing: .08em;">КРУТИТЬ НОМЕР<span style="font-family:Manrope; display:block; font-size:12px; font-weight:800; letter-spacing:.12em; margin-top:2px;">· ${num(plateCost())} ₽</span></button>
-            </div>
-        </div>
       </section>
     </div>
     `;
 }
 
 function bindPlateSection() {
-  const spinBtn = $('#pSpinBtn');
-  if(spinBtn) spinBtn.addEventListener('click', (e) => { e.stopPropagation(); doSpinPlate(); });
-
   const countrySel = $('#plateCountrySel');
   if(countrySel) countrySel.addEventListener('change', e => {
     selCountry = e.target.value;
@@ -3001,17 +3037,19 @@ function bindPlateSection() {
   const regSel = $('#regSel');
   if(regSel) regSel.addEventListener('change', e => { 
       selRegion = +e.target.value; 
-      const pBtn = $('#pSpinBtn');
-      if(pBtn) pBtn.innerHTML = `КРУТИТЬ НОМЕР<span style="font-family:Manrope; display:block; font-size:12px; font-weight:800; letter-spacing:.12em; margin-top:2px;">· ${num(plateCost())} ₽</span>`;
+      const costEl = $('#plateSpinCost');
+      if(costEl) costEl.textContent = `${num(plateCost())} ₽`; // Обновляем только цифру цены
   });
 
-  // КЛИК ПО ВСЕЙ ОБЛАСТИ
+  // ВОЗВРАЩАЕМ КЛИК ПО ВСЕЙ ОБЛАСТИ РУЛЕТКИ
   const spinnerSection = document.getElementById('spinner-plates');
-  if (spinnerSection && !spinnerSection.dataset.clickBound) {
-      spinnerSection.dataset.clickBound = "true"; // Защита от дублирования
+  if (spinnerSection) {
       spinnerSection.addEventListener('click', (e) => {
-          // Если кликнули на селект, кнопку или другую кнопку (сохранить/продать) - ничего не делаем
+          // Если кликнули на выпадающий список или кнопки (В коллекцию / Продать) - не крутим
           if (e.target.closest('select') || e.target.closest('button')) return;
+          // Если идет анимация редкого номера - не крутим
+          if (window.isAnimatingPlate) return; 
+          
           doSpinPlate();
       });
   }
@@ -3724,14 +3762,13 @@ function handleAction(e){
 
   if(act === 'sellplate'){
     if (pendingPlate) {
-        const price = pendingPlate.price;
+        const price = Math.floor(pendingPlate.price * 0.5); // <-- ДОБАВЛЕНА ПОЛОВИНА
         state.money += price;
         const sold = pendingPlate;
         pendingPlate = null;
         updateWallet();
         save();
         toast('Номер продан за ' + fmt(price), 'gold');
-
         $('#plateSection').innerHTML = plateSectionHTML();
         bindPlateSection();
     }
@@ -4201,11 +4238,14 @@ window.withdrawAdminBalance = async function() {
 
       await window.load(); 
 
-      window.startMarketListener();
-      window.startUserListener();  
-      window.startAdminListener();
-      window.startChatListener();
-      lastSeen: Date.now();
+    // Защита от дублирования слушателей
+    if (!window.listenersStarted) {
+        window.startMarketListener();
+        window.startUserListener();
+        window.startAdminListener();
+        window.startChatListener();
+        window.listenersStarted = true; // Ставим флаг, что мы их запустили
+    }
       
     } else {
       console.log("Ожидание выбора аккаунта...");
