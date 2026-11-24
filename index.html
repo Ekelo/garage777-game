@@ -563,6 +563,21 @@ const CAR_PATHS = {
   minivan:'M10,60 L12,40 Q14,32 25,32 L110,32 Q118,32 122,40 L135,48 L146,50 Q154,52 154,58 L154,60 Q154,66 148,66 L18,66 Q10,66 10,60 Z'
 };
 
+
+let saveTimer = null;
+let hasUnsavedChanges = false;
+
+function debouncedSave() {
+    hasUnsavedChanges = true;
+    if (saveTimer) clearTimeout(saveTimer);
+    
+    // Сохраняем через 1.5 секунды после последнего клика
+    saveTimer = setTimeout(async () => {
+        await save(); // Твоя старая функция сохранения
+        hasUnsavedChanges = false;
+        saveTimer = null;
+    }, 1500);
+}
 let marketItems = [];
 let marketUnsubscribe = null;
 let isMarketOpen = false;
@@ -580,15 +595,14 @@ window.startUserListener = function() {
     const userRef = window.firestoreDoc(window.firebaseDB, "users", window.firebaseUser.uid);
     
     userUnsubscribe = window.firestoreOnSnapshot(userRef, (doc) => {
-        if (doc.exists()) {
+        // Если есть локальные изменения, которые еще не улетели в базу - не трогаем их!
+        if (doc.exists() && !hasUnsavedChanges) {
             const data = doc.data();
-            // Обновляем локальное состояние тем, что пришло из базы
             state.money = data.money || 0;
             state.garage = data.garage || [];
             state.plates = data.plates || [];
             state.salesLog = data.salesLog || [];
             
-            // Обновляем интерфейс
             updateWallet();
             if (curTab === 'garage' && document.getElementById('dBody')) refreshGarageList();
             if (curTab === 'platesInv' && document.getElementById('dBody')) refreshPlatesList();
@@ -2601,11 +2615,12 @@ async function animatePlateSlot(el, text, country) {
 }
 
 async function doSpinPlate(){
-  if(window.isAnimatingPlate) return; // Блокируем клики во время анимации редкого номера
+  if(window.isAnimatingPlate) return; 
 
   const cost = plateCost();
   if(state.money < cost){ toast('Недостаточно денег для прокрутки номера', 'err'); return; }
 
+  // Если есть старый номер, кидаем его в инвентарь
   if(pendingPlate){
     state.plates.push(pendingPlate);
     pendingPlate = null;
@@ -2614,7 +2629,7 @@ async function doSpinPlate(){
 
   state.money -= cost;
   updateWallet();
-  // Убрали save() отсюда, чтобы клики не лагали. Сохранение сработает при получении номера.
+  debouncedSave(); // <--- УМНОЕ СОХРАНЕНИЕ
 
   const win = generatePlate(selCountry, selRegion, selPlateType);
   if (!win) {
@@ -2623,9 +2638,11 @@ async function doSpinPlate(){
   }
 
   pendingPlate = win;
-  updatePlateResultUI(); // Обновляем ТОЛЬКО блок с номером, без перезагрузки списков
+  updatePlateResultUI();
+  debouncedSave(); // <--- СОХРАНЯЕМ И НОВЫЙ НОМЕР ТОЖЕ
   
   const pEl = $('#plateResultBox').querySelector('.plate-container');
+  // ... (код анимации и свечения оставляем без изменений) ...
   if (pEl) {
       pEl.classList.add('pop-anim');
       
