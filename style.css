@@ -421,6 +421,7 @@ select,
 
 /* === ФИКС ЗАГОЛОВКА РУЛЕТКИ НОМЕРОВ === */
 #spinner-plates .strip-title {
+    user-select: none;
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
